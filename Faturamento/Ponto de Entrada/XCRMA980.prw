@@ -12,8 +12,7 @@
      - Criar item Contábil.
 
   @Autor Anderson Almeida - TOTVS
-  @história
-    27/08/2024 - Desenvolvimento da Rotina.
+  @since  27/08/2024 - Desenvolvimento da Rotina.
 /*/
 //----------------------------------------------------- 
 User Function CRMA980()
@@ -88,27 +87,27 @@ Return
 /*/
 //------------------------------------------
 Static Function fnSetCTD()
-	Local oModelSA1 := oModel:GetModel("SA1MASTER")
+  Local oModelSA1 := oModel:GetModel("SA1MASTER")
 
-	dbSelectArea("CTD")
-	CTD->(dbSetOrder(1))
+  dbSelectArea("CTD")
+  CTD->(dbSetOrder(1))
 
-	If ! (CTD->(dbSeek(FWxFilial("CTD") + "C" + oModelSA1:GetValue("A1_COD") + oModelSA1:GetValue("A1_LOJA"))))
-  	 RecLock("CTD",.T.)
-		   Replace CTD->CTD_FILIAL with FWxFilial("CTD") 
-		   Replace CTD->CTD_ITEM	 with "C" + oModelSA1:GetValue("A1_COD") + oModelSA1:GetValue("A1_LOJA")
-		   Replace CTD->CTD_CLASSE with "2"
-		   Replace CTD->CTD_NORMAL with "2"          
-		   Replace CTD->CTD_DESC01 with oModelSA1:GetValue("A1_NOME")
-		   Replace CTD->CTD_BLOQ	 with "2"    
-		   Replace CTD->CTD_DTEXIS with CToD("01/01/1980")
-		   Replace CTD->CTD_ITLP 	 with "C" + oModelSA1:GetValue("A1_COD") + oModelSA1:GetValue("A1_LOJA")
-		 CTD->(MsUnLock())  
+  If ! (CTD->(dbSeek(FWxFilial("CTD") + "C" + oModelSA1:GetValue("A1_COD") + oModelSA1:GetValue("A1_LOJA"))))
+     RecLock("CTD",.T.)
+	    Replace CTD->CTD_FILIAL with FWxFilial("CTD") 
+	    Replace CTD->CTD_ITEM	 with "C" + oModelSA1:GetValue("A1_COD") + oModelSA1:GetValue("A1_LOJA")
+	    Replace CTD->CTD_CLASSE with "2"
+	    Replace CTD->CTD_NORMAL with "2"          
+		 Replace CTD->CTD_DESC01 with oModelSA1:GetValue("A1_NOME")
+		 Replace CTD->CTD_BLOQ	 with "2"    
+		 Replace CTD->CTD_DTEXIS with CToD("01/01/1980")
+		 Replace CTD->CTD_ITLP 	 with "C" + oModelSA1:GetValue("A1_COD") + oModelSA1:GetValue("A1_LOJA")
+	  CTD->(MsUnLock())  
 
-		 If SA1->(FieldPos("A1_XITEMCC")) > 0
-				RecLock("SA1",.F.)
-					Replace SA1->A1_XITEMCC with "C" + oModelSA1:GetValue("A1_COD") + oModelSA1:GetValue("A1_LOJA")
-				SA1->(MsUnLock())
-		 EndIf
-	EndIf	
+	  If SA1->(FieldPos("A1_XITEMCC")) > 0
+		  RecLock("SA1",.F.)
+			 Replace SA1->A1_XITEMCC with "C" + oModelSA1:GetValue("A1_COD") + oModelSA1:GetValue("A1_LOJA")
+		  SA1->(MsUnLock())
+	  EndIf
+  EndIf	
 Return

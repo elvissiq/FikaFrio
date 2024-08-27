@@ -4,15 +4,12 @@
 #Include "TBICONN.ch"
 
 // ----------------------------------------------
-/*/{protheusDoc.marcadores_ocultos} ACLSFUSION
+/*/ Classe ACLSFUSION
 
-  Classe para integrção do FUSION x PROTHEUS
+    Classe para integrção do FUSION x PROTHEUS.
 
-  @author Anderson Almeida (TOTVS NE)
-  Retorno
-  @historia
-  24/03/2021 - Desenvolvimento da Rotina.
-  31/05/2024 - LOG de Envio e Retorno na tabela SZQ.
+  @author Anderson Almeida - TOTVS
+  @since   26/08/2024 - Desenvolvimento da Rotina.
 /*/
 // -----------------------------------------------
 Class PCLSFUSION
@@ -535,7 +532,7 @@ Method LerPedidoVenda(pPedido,pSeq,pSC5,pExcluido) Class PCLSFUSION
        nLTtVend  += (QPSQ->PRCVEN * QPSQ->QTDE)
 
       If Type("cStatusFUS") == "C"
-        cStatusFUS := "1" //Status Liberado
+         cStatusFUS := "1" //Status Liberado
       EndIf 
 
      else
