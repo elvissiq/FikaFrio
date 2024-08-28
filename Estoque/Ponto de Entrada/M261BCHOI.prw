@@ -1,5 +1,4 @@
 #INCLUDE "PROTHEUS.CH"
-
 #DEFINE ENTER Chr(10)+Chr(13)
 
 /*
@@ -8,7 +7,7 @@
 ±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
 ±±ºPrograma  ³M261BCHOI ºAutor  ³Microsiga           º Data ³  09/27/14   º±±
 ±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºDesc.     ³ Transferir insumos de produção para o armazem da produção. º±±
+±±ºDesc.     ³                                                            º±±
 ±±º          ³                                                            º±±
 ±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
 ±±ºUso       ³ AP                                                        º±±
@@ -44,22 +43,27 @@ Static Function _fTransTr(_cParam)
 Local _cArea     := GetArea()
 Local _cOPDe     := CriaVar("D3_OP",.F.)
 Local _cOPAt     := CriaVar("D3_OP",.F.)
+Local _cLocDe    := CriaVar("D3_LOCAL",.F.)
+Local _cLocAt    := CriaVar("D3_LOCAL",.F.)
 Local _cTipo
 Local _cUM
 Local _lPA       := .f.
+Local lInverte   := .F.
+Local oDlg1
 Local _nOpca     := 2
 Local _lContinua := .f.
 Local aSemSld    := {}
 Local _aCols261  := aClone(aCols)
 Local aSldLote   := {}
 Local _nSldLote  := 0
-Local nx         := 0
-Local nH         := 0
-Local nB         := 0
-Local cMask    	 := "Arquivos Texto (*.TXT) |*.txt|"
-Local	cFile	 :=	""
+Local cMask      := "Arquivos Texto (*.TXT) |*.txt|"
+Local cFile      := ""
+Local nx         := 1
+Local nH		 :=1
+Local aColsSX3   := {}
+Local aCampoTRB  := {}
 
-Private cMarca := GetMark()
+Private cMarca   := GetMark()
 
 DEFINE MSDIALOG _oDlg TITLE "Informar as OPs" FROM C(178),C(263) TO C(300),C(600) PIXEL
 
@@ -86,19 +90,19 @@ Endif
 //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 //³ Define os campos do arquivo de trabalho com as disciplinas do professor  ³
 //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-aCampoTRB := {	{ "TRB_OK"    	, "C", 2,0},;
-{ "TRB_OP"		, "C", TamSX3("D3_OP")[1],0},;
-{ "TRB_COD"		, "C", TamSX3("B2_COD")[1],0},;
-{ "TRB_DESC"	, "C", TamSX3("B1_DESC")[1],0},;
-{ "TRB_LOCAL"	, "C", TamSX3("B2_LOCAL")[1],0},;
-{ "TRB_QTDE"	, "N", TamSX3("D3_QUANT")[1],TamSX3("D3_QUANT")[2]},;
-{ "TRB_QUJE"	, "N", TamSX3("D3_QUANT")[1],TamSX3("D3_QUANT")[2]}}
+
+/*Coluna de marcação*/           AAdd(aCampoTRB,{"TRB_OK"  	,"C",          2,          0})
+BuscarSX3("D3_OP"	,,aColsSX3); AAdd(aCampoTRB,{"TRB_OP"	,"C",aColsSX3[3],aColsSX3[4]})
+BuscarSX3("B2_COD"	,,aColsSX3); AAdd(aCampoTRB,{"TRB_COD"	,"C",aColsSX3[3],aColsSX3[4]})
+BuscarSX3("B1_DESC"	,,aColsSX3); AAdd(aCampoTRB,{"TRB_DESC"	,"C",aColsSX3[3],aColsSX3[4]})
+BuscarSX3("B2_LOCAL",,aColsSX3); AAdd(aCampoTRB,{"TRB_LOCAL","C",aColsSX3[3],aColsSX3[4]})
+BuscarSX3("D3_QUANT",,aColsSX3); AAdd(aCampoTRB,{"TRB_QTDE"	,"N",aColsSX3[3],aColsSX3[4]})
+BuscarSX3("D3_QUANT",,aColsSX3); AAdd(aCampoTRB,{"TRB_QUJE"	,"N",aColsSX3[3],aColsSX3[4]})
 
 //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 //³ Cria o Arquivo de Trabalho que tera as Outras Grades Curriculares.       ³
 //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-_cArqTRB := CriaTrab(aCampoTRB,.T.)
-dbUseArea(.T.,,_cArqTRB,"TRB",.F.)
+criaTabTmp(aCampoTRB,{'TRB_OP'},"TRB")
 
 dbSelectArea("SC2")
 dbSetOrder(1)
@@ -149,7 +153,7 @@ If !Eof()
 	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 	//³ Define as colunas que serão exibidas na MarkBrowse                       ³
 	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-	
+
 	aCpoBrw :=  {{"TRB_OK"		, , " "," "},;
 	{ "TRB_OP" 		, , "OP" 		, PesqPict("SD3", "D3_OP"		)},;
 	{ "TRB_COD" 	, , "Produto" 	, PesqPict("SB2", "B2_COD"		)},;
@@ -157,9 +161,9 @@ If !Eof()
 	{ "TRB_LOCAL" 	, , "Local" 	, PesqPict("SB2", "B2_LOCAL"	)},;
 	{ "TRB_QTDE" 	, , "Quantidade", PesqPict("SD3", "D3_QUANT"	)},;
 	{ "TRB_QUJE" 	, , "Produzido" , PesqPict("SC2", "C2_QUJE"		)} }
-	
+
 	_nOpca := 1
-	
+
 	IF _nOpca == 1 // confirmou com itens selecionados
 		_aHeader := aClone(aHeader)
 		_nCodOri := Ascan(_aHeader,{|x| Alltrim(x[2]) == "D3_COD"})
@@ -214,8 +218,8 @@ If !Eof()
 					dbSkip()
 					Loop
 				Endif
-				
-				If SD4->D4_OPORIG == _cOPAt 				
+
+				If SD4->D4_OPORIG == _cOPAt
 					dbSelectArea("SD4")
 					dbSkip()
 					Loop
@@ -224,7 +228,6 @@ If !Eof()
 				If !SB2->(dbSeek(xFilial("SB2")+SD4->D4_COD+_cLocDes))
 					CriaSb2(SD4->D4_COD,_cLocDes)
 				EndIf
-
 				If Rastro(SD4->D4_COD)
 					dbSelectArea("SG1")
 					dbSetOrder(1)
@@ -236,10 +239,10 @@ If !Eof()
 						aSldLote := SldPorLote(SD4->D4_COD,SB1->B1_LOCPAD,SD4->D4_QUANT,SD4->D4_QTSEGUM,/*SD4->D4_LOTECTL*/,/*SD4->D4_NUMLOTE*/,NIL,;
 												NIL,NIL,.F.,SB1->B1_LOCPAD,NIL,NIL,.F.,dDataBase)
 						_nSldLote := 0
-						For nH:=1 to Len(aSldLote)					 	
+						For nH:=1 to Len(aSldLote)
 							AADD(aCols,Array(Len(aHeader)+1))
 							_nAcols := Len(aCols)
-							For nx := 1 to Len(aHeader)
+							For nx:=1 to Len(aHeader)
 								cCampo:=Alltrim(aHeader[nx,2])
 								If cCampo == "D3_ALI_WT"
 									aCols[_nAcols][nx] := "SD3"
@@ -248,7 +251,7 @@ If !Eof()
 								Else
 									aCols[_nAcols][nx] := CriaVar(cCampo,.F.)
 								Endif
-							Next
+							Next nx
 							aCOLS[_nAcols][Len(aHeader)+1] := .F.
 						// Preenche campos especificos
 			  				aCols[_nAcols,_nCodOri] := SD4->D4_COD
@@ -462,6 +465,7 @@ Local lRastroS  := Rastro(_cCodPro,'S')
 Local lLocalizO := Localiza(_cCodPro)
 Local lLocalizD := Localiza(_cCodPro)
 Local lPermNegat  := GetMV('MV_ESTNEG') == 'S'
+Local lDigita := .T.
 Local lContinua := .t.
 Local lSaldoSemR := Nil
 If !lPermNegat .And. (!(lRastroL .Or. lRastroS) .And. (!lLocalizO .And. !lLocalizD) .Or. IntDL(_cCodPro))
