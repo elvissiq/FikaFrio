@@ -43,13 +43,9 @@ Static Function _fTransTr(_cParam)
 Local _cArea     := GetArea()
 Local _cOPDe     := CriaVar("D3_OP",.F.)
 Local _cOPAt     := CriaVar("D3_OP",.F.)
-Local _cLocDe    := CriaVar("D3_LOCAL",.F.)
-Local _cLocAt    := CriaVar("D3_LOCAL",.F.)
 Local _cTipo
 Local _cUM
 Local _lPA       := .f.
-Local lInverte   := .F.
-Local oDlg1
 Local _nOpca     := 2
 Local _lContinua := .f.
 Local aSemSld    := {}
@@ -59,7 +55,8 @@ Local _nSldLote  := 0
 Local cMask      := "Arquivos Texto (*.TXT) |*.txt|"
 Local cFile      := ""
 Local nx         := 1
-Local nH		 :=1
+Local nH		 := 1
+Local nB         := 0
 Local aColsSX3   := {}
 Local aCampoTRB  := {}
 
@@ -459,14 +456,13 @@ Return Int(nTam)
 
 Static Function Verif_Sld(_cCodPro, _cLocOri, _nQuantOri, aSemSld)
 
-Local _aArea := GetArea()
-Local lRastroL  := Rastro(_cCodPro,'L')
-Local lRastroS  := Rastro(_cCodPro,'S')
-Local lLocalizO := Localiza(_cCodPro)
-Local lLocalizD := Localiza(_cCodPro)
-Local lPermNegat  := GetMV('MV_ESTNEG') == 'S'
-Local lDigita := .T.
-Local lContinua := .t.
+Local _aArea     := GetArea()
+Local lRastroL   := Rastro(_cCodPro,'L')
+Local lRastroS   := Rastro(_cCodPro,'S')
+Local lLocalizO  := Localiza(_cCodPro)
+Local lLocalizD  := Localiza(_cCodPro)
+Local lPermNegat := GetMV('MV_ESTNEG') == 'S'
+Local lContinua  := .t.
 Local lSaldoSemR := Nil
 If !lPermNegat .And. (!(lRastroL .Or. lRastroS) .And. (!lLocalizO .And. !lLocalizD) .Or. IntDL(_cCodPro))
 	If aScan(aSemSld,{|x| x[1]==_cCodPro}) == 0
