@@ -23,7 +23,7 @@ Local _cLocPad := SuperGetMv("MV_XLOCPRD",.F.,"90")
 Local _nI      := 1
 Local cTipo    := CriaVar("B1_TIPO", .F.)
 For _nI := 1 To Len(aCols)
-	cTipo := Posicione("SB1", 1, xFilial("SB1", 1, xFilial("SB1")+aCols[_nI,_nPosCd]), "B1_TIPO")
+	cTipo := Posicione("SB1", 1, xFilial("SB1")+aCols[_nI,_nPosCd], "B1_TIPO")
 	If !IsProdMOD(aCols[_nI,_nPosCd],.T.)
 		If cTipo <> "PI"
 			aCols[_nI][_nPosLc] := _cLocPad
