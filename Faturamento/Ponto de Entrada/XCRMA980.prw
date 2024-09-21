@@ -40,7 +40,7 @@ User Function CRMA980()
 
         Case cIdPonto == "MODELCOMMITNTTS"         // Chamada após a gravação total do modelo e fora da transação.
              If oModel:GetOperation() == 3 .or. oModel:GetOperation() == 4
-                fnEnviar()                         // Enviar cliente para o FUSION.
+                fnEnviar()                       // Enviar cliente para o FUSION.
                 fnSetCTD()                         // Criar item Contábil.
              EndIf
 
@@ -71,9 +71,9 @@ Static Function fnEnviar()
   aRet := oFusion:Enviar("sendClientes")             // Enviar para FUSION
   
   If aRet[01]
-     ApMsgInfo(aRet[02])
+     ApMsgInfo("Dados do Cliente enviado para FUSION com sucesso.")
    else
-     ApMsgAlert(aRet[02],"ATENÇÃO")  
+     ApMsgAlert("Retorno com erro: " + Chr(13) + Chr(10) + aRet[02],"ATENÇÃO - Integração FUSION")  
   EndIf
 Return
 

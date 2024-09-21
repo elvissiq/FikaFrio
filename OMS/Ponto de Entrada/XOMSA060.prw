@@ -68,8 +68,8 @@ Static Function fnEnviar()
   aRet := oFusion:Enviar("sendVeiculos")             // Enviar para FUSION
   
   If aRet[01]
-     ApMsgInfo(aRet[02])
+     ApMsgInfo("Dados do Veículo enviado para FUSION com sucesso.")
    else
-     ApMsgAlert(aRet[02],"ATENÇÃO")  
+     ApMsgAlert("Retorno com erro: " + Chr(13) + Chr(10) + aRet[02],"ATENÇÃO - Integração FUSION")  
   EndIf
 Return

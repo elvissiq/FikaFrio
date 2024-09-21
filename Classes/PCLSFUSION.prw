@@ -115,8 +115,8 @@ Method sendClientes(pCliente,pLoja) Class PCLSFUSION
   self:cBody += '          "descr_cliente":"' + FwNoAccent(AllTrim(SA1->A1_NREDUZ)) + '",'
   self:cBody += '          "razao_cliente":"' + FwNoAccent(AllTrim(SA1->A1_NOME)) + '",'
   self:cBody += '          "cnpj_cpf_cliente":"' + SA1->A1_CGC + '",'
-  self:cBody += '          "cliente_cod_rota_erp":"",'
-  self:cBody += '          "cliente_descricao_rota ":"",'
+  self:cBody += '          "cliente_cod_rota_erp": "' + SA1->A1_XROTA + '",'
+  self:cBody += '          "cliente_descricao_rota ": "' + Posicione("Z02",1,FWxFilial("Z02") + SA1->A1_XROTA,"Z02_DESCRI") + '",'
   self:cBody += '          "cod_segmento":"2",'
   self:cBody += '          "descr_segmento":"' + AllTrim(Posicione("SX5",1,FWxFilial("SX5") + "T3" + SA1->A1_SATIV1,"X5_DESCRI")) + '",'
   self:cBody += '          "cep_cliente":"' + IIF(!Empty(SA1->A1_CEPE),SA1->A1_CEPE,SA1->A1_CEP) + '",'
@@ -145,7 +145,7 @@ Method sendClientes(pCliente,pLoja) Class PCLSFUSION
   self:cBody += '          "turnos_entrega":"08:00-12:00;14:00-17:00",'
   self:cBody += '          "prioritario":"N",'
   self:cBody += '          "bloqueiosefaz":"N",'
-  self:cBody += '          "rede_loja_cliente":"' + SA1->A1_LOJA + '",'
+  self:cBody += '          "rede_loja_cliente":"' + AllTrim(SA1->A1_LOJA) + '",'
   self:cBody += '          "end_alt" :
   self:cBody += '             [{ }]'
   self:cBody += '        }'
@@ -161,7 +161,7 @@ Method sendClientes(pCliente,pLoja) Class PCLSFUSION
 Return .T.
 
 //-------------------------------------------------------------------
-/*/{protheusDoc.marcadores_ocultos} PCLSFUSION
+/*/ Classe PCLSFUSION
   Objeto sendVeiculos
   
     Montagem do Cadastro de Veí­culo
@@ -224,8 +224,8 @@ Method sendVeiculos(pCodigo) Class PCLSFUSION
   self:cBody += '          "descricao":"' + FwNoAccent(AllTrim(DA3->DA3_DESC)) + '",'
   self:cBody += '          "kmAtual":"0",'
   self:cBody += '          "modelo":"' + FwNoAccent(AllTrim(Posicione("DUT",1,FWxFilial("DUT") + DA3->DA3_TIPVEI,"DUT_DESCRI"))) + '",'
-  self:cBody += '          "anoModelo":"' + DA3->DA3_ANOMOD + '",'
-  self:cBody += '          "anoFabricacao":"' + DA3->DA3_ANOFAB + '",'
+  self:cBody += '          "anoModelo":"' + AllTrim(DA3->DA3_ANOMOD) + '",'
+  self:cBody += '          "anoFabricacao":"' + AllTrim(DA3->DA3_ANOFAB) + '",'
   self:cBody += '          "qtdMaxEntregas":"0",'
   self:cBody += '          "velocidade_maxima":"80",'
   self:cBody += '          "tipo_combustivel":"",'
@@ -309,7 +309,6 @@ Method sendMotoristas(pCodigo) Class PCLSFUSION
   self:cBody += '</soapenv:Envelope>'
 
   MemoWrite("C:\Temp\Motorista.xml",self:cBody)
-
 Return .T.
 
 //-------------------------------------------------------------------
@@ -531,9 +530,9 @@ Method LerPedidoVenda(pPedido,pSeq,pSC5,pExcluido) Class PCLSFUSION
        nLCubagem += QPSQ->QTDE * (QPSQ->B5_COMPRLC * QPSQ->B5_ALTURLC * QPSQ->B5_LARGLC)
        nLTtVend  += (QPSQ->PRCVEN * QPSQ->QTDE)
 
-      If Type("cStatusFUS") == "C"
-         cStatusFUS := "1" //Status Liberado
-      EndIf 
+       If Type("cStatusFUS") == "C"
+          cStatusFUS := "1" //Status Liberado
+       EndIf 
 
      else
        aAdd(aRegBloq,{QPSQ->PRODUTO,;                         // 01 - Produto
@@ -565,12 +564,11 @@ Method LerPedidoVenda(pPedido,pSeq,pSC5,pExcluido) Class PCLSFUSION
        nBCubagem += QPSQ->QTDE * (QPSQ->B5_COMPRLC * QPSQ->B5_ALTURLC * QPSQ->B5_LARGLC)
        nBTtVend  += (QPSQ->PRCVEN * QPSQ->QTDE)
 
-      If Type("cStatusFUS") == "C"
-        If Empty(cStatusFUS) .Or. cStatusFUS == "0"
-          cStatusFUS := "B" //Status Bloqueado
-        EndIf 
-      EndIf
-
+       If Type("cStatusFUS") == "C"
+          If Empty(cStatusFUS) .Or. cStatusFUS == "0"
+             cStatusFUS := "B" //Status Bloqueado
+          EndIf 
+       EndIf
     EndIf  
 
     QPSQ->(dbSkip())
@@ -620,59 +618,42 @@ Return aRet
 //-------------------------------------------------
 Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCLSFUSION 
   Local cStatusFUS := pStatus  // N - Normal ou B - Bloqueado
-  Local nId       := 0
-  Local cPedido   := ""
-  //Local cPedOrig  := ""
-  Local cCondPag  := Alltrim(Posicione("SE4",1,FWxFilial("SE4")+SC5->C5_CONDPAG,"E4_DESCRI"))
-  Local lEnvBlq   := SuperGetMV("MV_XENVBLQ",.F.,.F.)
-  Local cFilFus   := ""
-  Local _cAliasC9 := "TSC9"+FWTimeStamp(1)
-  Local cQrySC9   := ""
+  Local nId        := 0
+  Local cPedido    := ""
+  Local cCondPag   := Alltrim(Posicione("SE4",1,FWxFilial("SE4")+SC5->C5_CONDPAG,"E4_DESCRI"))
+  Local lEnvBlq    := SuperGetMV("MV_XENVBLQ",.F.,.F.)
+  Local cFilFus    := ""
+  Local _cAliasC9  := "TSC9"+FWTimeStamp(1)
+  Local cQrySC9    := ""
 
   Default cNFiscal := IIF(ValType(pNFiscal) != "U", pNFiscal, Alltrim(SC5->C5_NOTA))
   Default cSerieNF := IIF(ValType(pSerieNF) != "U", pSerieNF, Alltrim(SC5->C5_SERIE))
 
-  IF lCarga
-    cQrySC9 := " SELECT * FROM "+ RetSqlName("SC9") +" SC9 "
-    cQrySC9 += " WHERE D_E_L_E_T_ <> '*' "
-    cQrySC9 += "   AND	C9_FILIAL  = '" + SC5->C5_FILIAL +"' "
-    cQrySC9 += "   AND	C9_PEDIDO  = '" + SC5->C5_NUM +"' "
-    cQrySC9 := ChangeQuery(cQrySC9)
-    IF Select(_cAliasC9) <> 0
-        (_cAliasC9)->(DbCloseArea())
-    EndIf
-    dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQrySC9),_cAliasC9,.T.,.T.)
-    While (_cAliasC9)->(!Eof())
-        If !Empty((_cAliasC9)->C9_CARGA)
+  If lCarga
+     cQrySC9 := "SELECT * FROM "+ RetSqlName("SC9") +" SC9 "
+     cQrySC9 += " WHERE D_E_L_E_T_ <> '*' "
+     cQrySC9 += "   AND	C9_FILIAL  = '" + SC5->C5_FILIAL + "'"
+     cQrySC9 += "   AND	C9_PEDIDO  = '" + SC5->C5_NUM + "'"
+     cQrySC9 := ChangeQuery(cQrySC9)
+     dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQrySC9),_cAliasC9,.T.,.T.)
+    
+     While (_cAliasC9)->(!Eof())
+        If ! Empty((_cAliasC9)->C9_CARGA)
           self:aRegistro[01][21] := (_cAliasC9)->C9_CARGA
+
           Exit
         EndIf
+
         (_cAliasC9)->(DBSkip())
     EndDo
-    IF Select(_cAliasC9) <> 0
-        (_cAliasC9)->(DbCloseArea())
-    EndIf
+
+    (_cAliasC9)->(DbCloseArea())
   EndIf
 
-  If FWSM0Util():GetSM0Data(cEmpAnt , cFilAnt , { "M0_ESTENT" })[1,2] == "PE"
-    Do Case
-      Case SC5->C5_FILIAL == SC5->C5_XFPVOP
-        cFilFus := SC5->C5_FILIAL
-      Case Empty(SC5->C5_XFPVOP)
-        cFilFus := SC5->C5_FILIAL
-      Case SC5->C5_FILIAL != SC5->C5_XFPVOP
-        cFilFus := SC5->C5_XFPVOP
-    EndCase 
-  Else
-    cFilFus := SC5->C5_FILIAL
-  EndIF
-
   If self:aRegistro[01][20] == 0
-    cPedido  := IIF(!Empty(self:aRegistro[01][15]), cFilFus + "_" + self:aRegistro[01][15],"")
-    //cPedOrig := IIF(!Empty(SC5->C5_XFPVOP) .AND. !Empty(SC5->C5_XNUMORI),SC5->C5_XFPVOP+"_"+SC5->C5_XNUMORI,cPedido)
+     cPedido := IIf(! Empty(self:aRegistro[01][15]), cFilFus + "_" + self:aRegistro[01][15],"")
    else
-    cPedido  := IIF(!Empty(self:aRegistro[01][15]), cFilFus + "_" + self:aRegistro[01][15] + "_" + StrZero(self:aRegistro[01][20],TamSX3("C5_XSEQFUS")[1]),"")
-    //cPedOrig := IIF(!Empty(SC5->C5_XFPVOP) .AND. !Empty(SC5->C5_XNUMORI),SC5->C5_XFPVOP+"_"+SC5->C5_XNUMORI,cPedido)
+     cPedido := IIf(! Empty(self:aRegistro[01][15]), cFilFus + "_" + self:aRegistro[01][15] + "_" + StrZero(self:aRegistro[01][20],TamSX3("C5_XSEQFUS")[1]),"")
   EndIf
 
   dbSelectArea("SA1")
@@ -699,12 +680,14 @@ Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCL
   self:cBody += '          "status": "' + cStatusFUS + '",'
   self:cBody += '          "obs": "",'
   self:cBody += '          "num_ped_conf": "' + cPedido + '",'
-  self:cBody += '          "carga": "' + IIf(lCarga, IIF(!Empty(self:aRegistro[01][21]), cFilFus+"_"+self:aRegistro[01][21],""), "") + '",'
+  self:cBody += '          "carga": "' + IIf(lCarga, IIf(!Empty(self:aRegistro[01][21]), cFilFus+"_"+self:aRegistro[01][21],""), "") + '",'
+  
   If self:aRegistro[01][13] > 0 
-    self:cBody += '        "cubagem": "' + AllTrim(Str(self:aRegistro[01][13])) + '",'
-  else
-    self:cBody += '        "cubagem": "' + "0.000001" + '",'
+     self:cBody += '        "cubagem": "' + AllTrim(Str(self:aRegistro[01][13])) + '",'
+   else
+     self:cBody += '        "cubagem": "0.000001",'
   EndIf 
+  
   self:cBody += '          "podeformarcarga": "' + pForma + '",'
   self:cBody += '          "valor": "' + AllTrim(Str(self:aRegistro[01][14],16,2)) + '",'
   self:cBody += '          "peso": "' + AllTrim(Str(self:aRegistro[01][12],16,2)) + '",'
@@ -713,9 +696,9 @@ Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCL
   self:cBody += '          "empresa_log": "' + cFilFus + '",'
   self:cBody += '          "empresa_digit": "' + cFilFus + '",'
   self:cBody += '          "pedido_orig": "' + cPedido + '",'
-  self:cBody += '          "dt_list_nf": "' + AllTrim(Str(Year(IIF(Empty(SC5->C5_SUGENT),dDataBase,SC5->C5_SUGENT))) + "-" +;
-                                                      StrZero(Month(IIF(Empty(SC5->C5_SUGENT),dDataBase,SC5->C5_SUGENT)),2) + '-' +;
-                                                      StrZero(Day(IIF(Empty(SC5->C5_SUGENT),dDataBase,SC5->C5_SUGENT)),2) + " " + Time()) + '",'
+  self:cBody += '          "dt_list_nf": "' + AllTrim(Str(Year(IIf(Empty(SC5->C5_SUGENT),dDataBase,SC5->C5_SUGENT))) + "-" +;
+                StrZero(Month(IIf(Empty(SC5->C5_SUGENT), dDataBase, SC5->C5_SUGENT)),2) + '-' +;
+                StrZero(Day(IIf(Empty(SC5->C5_SUGENT), dDataBase, SC5->C5_SUGENT)),2) + " " + Time()) + '",'
   self:cBody += '          "data_alt": "2021-12-09 12:14:37",'
   self:cBody += '          "nf_cod_rota_erp": "' + self:aRegistro[01][22] + '",'
   self:cBody += '          "nf_descricao_rota": "' + FwNoAccent(self:aRegistro[01][23]) + '",'
@@ -769,24 +752,22 @@ Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCL
   self:cBody += '             ['
 
   For nId := 1 To Len(self:aRegistro)
+      If lEnvBlq    // Envia produtos bloqueados
+         self:cBody += '  {'
+         self:cBody += '   "cod_produto_erp": "' + self:aRegistro[nId][01] + '",'
+         self:cBody += '   "descricao": "' + AllTrim(FwNoAccent(self:aRegistro[nId][02])) + '",'
+         self:cBody += '   "unidade": "' + self:aRegistro[nId][03] + '",'
+         self:cBody += '   "qtd": "' + AllTrim(Str(self:aRegistro[nId][04])) + '",'
+         self:cBody += '   "peso": "' + AllTrim(Str(self:aRegistro[nId][05],16,2)) + '",'
+         self:cBody += '   "preco": "' + AllTrim(Str(self:aRegistro[nId][06],16,2)) + '",'
+         self:cBody += '   "subtotal": "' + AllTrim(Str(self:aRegistro[nId][07],16,2)) + '",'
+         self:cBody += '   "valor_icms_st": "' + AllTrim(Str(self:aRegistro[nId][08])) + '",'
+         self:cBody += '   "ncm": "' + self:aRegistro[nId][09] + '",'
+         self:cBody += '   "cst": "' + Str(self:aRegistro[nId][10]) + '",'
+         self:cBody += '   "obs_item": "' + FwNoAccent(AllTrim(self:aRegistro[nId][11])) + '"'
+         self:cBody += '  }' + IIf(nId < Len(self:aRegistro),',','') 
       
-      If lEnvBlq //Envia produtos bloqueados
-        
-        self:cBody += '  {'
-        self:cBody += '   "cod_produto_erp": "' + self:aRegistro[nId][01] + '",'
-        self:cBody += '   "descricao": "' + AllTrim(FwNoAccent(self:aRegistro[nId][02])) + '",'
-        self:cBody += '   "unidade": "' + self:aRegistro[nId][03] + '",'
-        self:cBody += '   "qtd": "' + AllTrim(Str(self:aRegistro[nId][04])) + '",'
-        self:cBody += '   "peso": "' + AllTrim(Str(self:aRegistro[nId][05],16,2)) + '",'
-        self:cBody += '   "preco": "' + AllTrim(Str(self:aRegistro[nId][06],16,2)) + '",'
-        self:cBody += '   "subtotal": "' + AllTrim(Str(self:aRegistro[nId][07],16,2)) + '",'
-        self:cBody += '   "valor_icms_st": "' + AllTrim(Str(self:aRegistro[nId][08])) + '",'
-        self:cBody += '   "ncm": "' + self:aRegistro[nId][09] + '",'
-        self:cBody += '   "cst": "' + Str(self:aRegistro[nId][10]) + '",'
-        self:cBody += '   "obs_item": "' + FwNoAccent(AllTrim(self:aRegistro[nId][11])) + '"'
-        self:cBody += '  }' + IIf(nId < Len(self:aRegistro),',','') 
-      
-      ElseIF !lEnvBlq .AND. self:aRegistro[nId][25] == 'L' //Só envia produtos liberados
+      ElseIf ! lEnvBlq .AND. self:aRegistro[nId][25] == 'L' // Só envia produtos liberados
         
         self:cBody += '  {'
         self:cBody += '   "cod_produto_erp": "' + self:aRegistro[nId][01] + '",'
@@ -817,7 +798,6 @@ Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCL
   self:cBody += '</soapenv:Envelope>'
   
   MemoWrite("C:\Temp\Pedido.xml",self:cBody)
-
 Return
 
 //----------------------------------------------
@@ -1060,24 +1040,26 @@ Method Enviar(pMetodo) Class PCLSFUSION
         If ! Empty(oXML:cText)
            cRetJson := oJson:FromJson(oXML:cText)
 
-           If ValType(retJson) == "U"
+           If ValType(cRetJson) == "U"
+              If ValType(oJson["erro_detalhes"]) == "A"
+                 If Len(oJson["erro_detalhes"]) > 0
+                    aRet[01] := .F.
+                    aRet[02] := oJson["erro_detalhes"][1]["descricao"]
+                 EndIf
+              EndIf
+
+              If ValType(oJson["success"]) == "A" .and. aRet[01]
+                 If Len(oJson["success"]) > 0 
+                    aRet[01] := .T.
+                    aRet[02] := oXML:cText
+                 EndIf
+              EndIf
+/*              
               Do Case
-                 Case ValType(oJson["success"]) == "A"
-                      If Len(oJson["success"]) > 0 
-                         aRet[01] := .T.
-                         aRet[02] := oXML:cText
-                      EndIf
-
-                 Case ValType(oJson["errors"]) == "A"
-                      If Len(oJson["errors"]) > 0
-                         aRet[01] := .F.
-                         aRet[02] := oXML:cText
-                      EndIf
-
                  Case cMetodo == "getIntErpFilial"
                       cRetJson := oJson:FromJson('{"response":' + oXML:cText + '}')
 
-                      If ValType(retJson) == "U" .and. ValType(oJson["response"]) == "A"
+                      If ValType(cRetJson) == "U" .and. ValType(oJson["response"]) == "A"
                          self:oParseJSON := oJson["response"]
                          aRet[02] := oXML:cText
                       EndIf
@@ -1085,7 +1067,7 @@ Method Enviar(pMetodo) Class PCLSFUSION
                  Case cMetodo <> "detalheCarga" .and. cMetodo <> "getIntErpFilial"
                       aRet[01] := .F.
                       aRet[02] := oXML:cText
-              EndCase
+              EndCase*/
            else
               If cMetodo == "setIntErp"
                  If AllTrim(oXML:cText) <> "OK"
