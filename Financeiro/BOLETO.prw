@@ -1947,9 +1947,12 @@ Static Function Modulo11(cData,nPeso,cOrig)
    Endif
 
    If cQualBco == "748"
-      If D <= 1 
-         D := 0
-      EndIf          
+      // If D <= 1 
+      //    D := 0
+      // EndIf 
+      If D > 9 
+         D := 1
+      EndIf         
    EndIf
    
 Return(D)
@@ -2018,8 +2021,8 @@ Static Function Modulo11NN(cData,nPeso,cOrig)
    EndIf
 
    If cQualBco == "748"
-      If D > 9 
-         D := 1
+      If D == 10 .or. D == 11 
+         D := 0
       EndIf          
    EndIf
 
@@ -2155,7 +2158,7 @@ Static Function Ret_cBarra(pBanco,pAgencia,pConta,pDacCC,pCart,pNNum,pValor,pVen
   If cVersao == "11"            
      aLinDig[07] := fnResolP11(aLinDig[07])
   EndIf
-  
+   
   cS      := &(aLinDig[07])
   nDvcb   := modulo11(cS,9,"") // Calculo do Digito Geral
   cCB     := SubStr(cS,1,4) + AllTrim(Str(nDvcb)) + SubStr(cS,5,39)
