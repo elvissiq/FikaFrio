@@ -9,7 +9,7 @@ Através deste ponto é possível realizar manipulações nos dados do produto,
 mensagens adicionais, destinatário, dados da nota, pedido de venda ou compra, antes da 
 montagem do XML, no momento da transmissão da NFe.
 @author TOTVS NORDESTE (Elvis Siqueira)
-@since 22/10/2024
+@since 23/10/2024
 @version 1.0
     @return Nil
         PE01NFESEFAZ - Manipulação em dados do produto ( [ aParam ] ) --> aRetorno
@@ -84,7 +84,7 @@ User Function PE01NFESEFAZ()
             EndIF 
 
             If !Empty(SD2->D2_LOTECTL)
-                aProd[_nI][4] := Alltrim(aProd[_nI][4]) + " ;LOTE: " + Alltrim(SD2->D2_NUMSERI)
+                aProd[_nI][4] := Alltrim(aProd[_nI][4]) + " ;LOTE: " + Alltrim(SD2->D2_LOTECTL)
                 aProd[_nI][4] := Alltrim(aProd[_nI][4]) + " ;QTD: " + AllTrim(AllToChar(aProd[_nI,9],cPictQtd))
             EndIF
 
