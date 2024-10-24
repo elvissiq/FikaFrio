@@ -10,23 +10,16 @@
 *-----------------------------------------------------------------------------------------------------*/
 
 User function M460NOTA()
-    Local aAreaSF2   := SF2->(FWGetArea())
-	Local aAreaDAK   := DAK->(FWGetArea())
-	Local aAreaSE1   := SE1->(FWGetArea())
-    Local aAreaSA1   := SA1->(FWGetArea())
-    Local aAreaSA6   := SA6->(FWGetArea())
-    Local lGeraBol	 := SuperGetMV("MV_XBOLETO",.F.,.F.)
-    Local cTabPar    := ""
-    Local cQuery     := ""
-    Local _cAlias    := GetNextAlias()
-    Local lContinua  := .F.
-    Local cBank      := ""
-    Local cAgenc     := ""
-    Local cContCC    := ""
-    Local cSubCC     := ""
-    Local nPosBk     := 0
-    Local nPosAg     := 0
-    Local nPosCc     := 0
+    Local aArea     := FWGetArea()
+    Local lGeraBol	:= SuperGetMV("MV_XBOLETO",.F.,.F.)
+    Local cTabPar   := ""
+    Local cQuery    := ""
+    Local _cAlias   := GetNextAlias()
+    Local cBank     := ""
+    Local cAgenc    := ""
+    Local cContCC   := ""
+    Local cSubCC    := ""
+    Local nPosBk    := 0
     Local nY
 
     Private aTitM460 := {}
@@ -91,21 +84,26 @@ User function M460NOTA()
             EndIF 
         EndIF 
         
-        nPosBk := AScan(aTitM460, {|x| AllTrim(x[1]) == cBank  })
-        nPosAg := AScan(aTitM460, {|x| AllTrim(x[1]) == cAgenc })
-        nPosCc := AScan(aTitM460, {|x| AllTrim(x[1]) == cContCC})
+        nPosBk := AScan(aTitM460, {|x| AllTrim(x[1]) == cBank+";"+cAgenc+";"+cContCC+";"+cSubCC  })
 
-        If !Empty(nPosBk) .AND. !Empty(nPosAg) .AND. !Empty(nPosCc)
-            aAdd(aTitM460, { cBank, cAgenc, cContCC, cSubCC })
+        If Empty(nPosBk)
+            aAdd(aTitM460,{ cBank+";"+cAgenc+";"+cContCC+";"+cSubCC })
+            aTitAux := {}
+            aAdd(aTitAux ,{ {"E1_FILIAL" , (_cAlias)->E1_FILIAL},;
+                            {"E1_PREFIXO", (_cAlias)->E1_PREFIXO},;
+                            {"E1_NUM"    , (_cAlias)->E1_NUM},;
+                            {"E1_PARCELA", (_cAlias)->E1_PARCELA},;
+                            {"E1_TIPO"   , (_cAlias)->E1_TIPO} })
+            aAdd(aTitM460[Len(aTitM460)], aTitAux)
         Else
-            aAdd(aTitM460[nPosCc], { cBank, cAgenc, cContCC, cSubCC })
+            aTitAux := {}
+            aAdd(aTitAux ,{ {"E1_FILIAL" , (_cAlias)->E1_FILIAL},;
+                            {"E1_PREFIXO", (_cAlias)->E1_PREFIXO},;
+                            {"E1_NUM"    , (_cAlias)->E1_NUM},;
+                            {"E1_PARCELA", (_cAlias)->E1_PARCELA},;
+                            {"E1_TIPO"   , (_cAlias)->E1_TIPO} })
+            aAdd(aTitM460[nPosBk], aTitAux)
         EndIF 
-
-        aAdd(aTitM460[nPosBk][02],{ {"E1_FILIAL" , (_cAlias)->E1_FILIAL},;
-                                    {"E1_PREFIXO", (_cAlias)->E1_PREFIXO},;
-                                    {"E1_NUM"    , (_cAlias)->E1_NUM},;
-                                    {"E1_PARCELA", (_cAlias)->E1_PARCELA},;
-                                    {"E1_TIPO"   , (_cAlias)->E1_TIPO} })
 
         (_cAlias)->(DBSkip())
     End
@@ -117,19 +115,13 @@ User function M460NOTA()
     //-----------------------------------------------------------------------------------------------------------
 	//Monta borderô automaticamente
 	If lGeraBol
-        For nY := 1 To aTitM460
-            IF Len(aTitM460[nY]) == 4
-                fnGerBor(aTitM460[nY]) //Gera o borderô
-            EndIF
+        For nY := 1 To Len(aTitM460)
+            fnGerBor(nY) //Gera o borderô
         Next
     EndIF 
 	//-----------------------------------------------------------------------------------------------------------
 
-    FWRestArea(aAreaSA6)
-    FWRestArea(aAreaSA1)
-    FWRestArea(aAreaSF2)
-	FWRestArea(aAreaDAK)
-	FWRestArea(aAreaSE1)
+    FWRestArea(aArea)
 
 Return
 
@@ -142,13 +134,13 @@ Return
   Return
 /*/
 // -----------------------------------------
-Static Function fnGerBor()
-  Local cTmp    := GetNextAlias()
-  Local cFiltro := ""
-  Local cNumBor := ""
-  Local cEspec  := ""  
+Static Function fnGerBor(nY)
+  Local aBanco  := StrTokArr(aTitM460[nY][01],";")
+  Local cEspec  := "" 
   Local aRegBor := {}
-
+  Local aRegTit := {}
+  Local nX
+  
   Private lMsErroAuto    := .F.
   Private lMsHelpAuto    := .T.
   Private lAutoErrNoFile := .T.
@@ -157,8 +149,8 @@ Static Function fnGerBor()
  // ---------------------------------------
 
   DBSelectArea("F77")
-  IF F77->(MsSeek(FWxFilial("F77")+cBanco))
-    While ! F77->(Eof()) .AND. F77->F77_BANCO == cBanco
+  IF F77->(MsSeek(FWxFilial("F77")+aBanco[01]))
+    While ! F77->(Eof()) .AND. F77->F77_BANCO == aBanco[01]
       If F77->F77_SIGLA == PadR('DM',FWTamSX3("F77_SIGLA")[1]) 
         cEspec := F77->F77_ESPECI
         Exit
@@ -167,16 +159,20 @@ Static Function fnGerBor()
     End 
   EndIf 
 
-  aAdd(aRegBor, {"AUTBANCO"   , aTitM460[01][01]})
-  aAdd(aRegBor, {"AUTAGENCIA" , aTitM460[01][02]})
-  aAdd(aRegBor, {"AUTCONTA"   , aTitM460[01][03]})
+  aAdd(aRegBor, {"AUTBANCO"   , aBanco[01]})
+  aAdd(aRegBor, {"AUTAGENCIA" , aBanco[02]})
+  aAdd(aRegBor, {"AUTCONTA"   , aBanco[03]})
   aAdd(aRegBor, {"AUTSITUACA" , PadR("1",FWTamSX3("E1_SITUACA")[1])})
-  aAdd(aRegBor, {"AUTNUMBOR"  , PadR(cNumBor,FWTamSX3("E1_NUMBOR")[1])}) // Caso não seja passado o número será obtido o próximo pelo padrão do sistema
-  aAdd(aRegBor, {"AUTSUBCONTA", aTitM460[01][04]})
+  aAdd(aRegBor, {"AUTNUMBOR"  , PadR("",FWTamSX3("E1_NUMBOR")[1])}) // Caso não seja passado o número será obtido o próximo pelo padrão do sistema
+  aAdd(aRegBor, {"AUTSUBCONTA", aBanco[04]})
   aAdd(aRegBor, {"AUTESPECIE" , cEspec})
   aAdd(aRegBor, {"AUTBOLAPI"  , .T.})
 
-  MsExecAuto({|a,b| FINA060(a,b)},3,{aRegBor, aTitM460[02]})
+  For nX := 2 To Len(aTitM460[nY])
+    aAdd(aRegTit, aTitM460[nY][nX][1])
+  Next
+
+  MsExecAuto({|a,b| FINA060(a,b)},3,{aRegBor, aRegTit})
 
   If lMsErroAuto
     MostraErro()
