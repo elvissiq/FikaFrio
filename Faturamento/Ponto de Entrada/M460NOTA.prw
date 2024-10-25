@@ -114,7 +114,7 @@ User function M460NOTA()
 
     //-----------------------------------------------------------------------------------------------------------
 	//Monta borderô automaticamente
-	If lGeraBol
+	If lGeraBol .AND. !Empty(aTitM460)
         For nY := 1 To Len(aTitM460)
             fnGerBor(nY) //Gera o borderô
         Next
