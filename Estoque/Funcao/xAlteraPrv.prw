@@ -2,10 +2,6 @@
 #INCLUDE 'Protheus.ch'
 #INCLUDE "RWMAKE.CH"
 #INCLUDE "TBICONN.CH"
-#INCLUDE 'FWMVCDef.ch'
-#INCLUDE "APWEBSRV.CH"
-#INCLUDE "totvswebsrv.ch"
-#INCLUDE "FWEVENTVIEWCONSTS.CH"
 
 /*/{Protheus.doc} xAlteraDado
   Carga de dados para alteração
@@ -46,7 +42,7 @@ Static Function fProcess()
     
     nAtual++
 
-    MsProcTxt("Processando registro " + cValToChar(nAtual) + " de " + cValToChar(nTotal) + "...")
+    IncProc("Processando registro " + cValToChar(nAtual) + " de " + cValToChar(nTotal) + "...")
 
     IF SB1->(MSSeek(xFilial("SB1") + (_cAlias)->B1_COD ))
       
@@ -54,43 +50,43 @@ Static Function fProcess()
 
       For nY := 1 To 12
         cConteudo := StrTran(cConteudo, "'", " ")
-        cConteudo := StrTran(cConteudo, "#", " ")
-        cConteudo := StrTran(cConteudo, "%", " ")
-        cConteudo := StrTran(cConteudo, "*", " ")
-        cConteudo := StrTran(cConteudo, "&", "E")
-        cConteudo := StrTran(cConteudo, ">", " ")
-        cConteudo := StrTran(cConteudo, "<", " ")
-        cConteudo := StrTran(cConteudo, "!", " ")
-        cConteudo := StrTran(cConteudo, "@", " ")
-        cConteudo := StrTran(cConteudo, "$", " ")
-        cConteudo := StrTran(cConteudo, "(", " ")
-        cConteudo := StrTran(cConteudo, ")", " ")
-        cConteudo := StrTran(cConteudo, "_", " ")
-        cConteudo := StrTran(cConteudo, "=", " ")
-        cConteudo := StrTran(cConteudo, "+", " ")
-        cConteudo := StrTran(cConteudo, "{", " ")
-        cConteudo := StrTran(cConteudo, "}", " ")
-        cConteudo := StrTran(cConteudo, "[", " ")
-        cConteudo := StrTran(cConteudo, "]", " ")
-        cConteudo := StrTran(cConteudo, "/", " ")
-        cConteudo := StrTran(cConteudo, "?", " ")
-        cConteudo := StrTran(cConteudo, ".", " ")
-        cConteudo := StrTran(cConteudo, "\", " ")
-        cConteudo := StrTran(cConteudo, "|", " ")
-        cConteudo := StrTran(cConteudo, ":", " ")
-        cConteudo := StrTran(cConteudo, ";", " ")
+        cConteudo := StrTran(cConteudo, '#', " ")
+        cConteudo := StrTran(cConteudo, '%', " ")
+        cConteudo := StrTran(cConteudo, '*', " ")
+        cConteudo := StrTran(cConteudo, '&', "E")
+        cConteudo := StrTran(cConteudo, '>', " ")
+        cConteudo := StrTran(cConteudo, '<', " ")
+        cConteudo := StrTran(cConteudo, '!', " ")
+        cConteudo := StrTran(cConteudo, '@', " ")
+        cConteudo := StrTran(cConteudo, '$', " ")
+        cConteudo := StrTran(cConteudo, '(', " ")
+        cConteudo := StrTran(cConteudo, ')', " ")
+        cConteudo := StrTran(cConteudo, '_', " ")
+        cConteudo := StrTran(cConteudo, '=', " ")
+        cConteudo := StrTran(cConteudo, '+', " ")
+        cConteudo := StrTran(cConteudo, '{', " ")
+        cConteudo := StrTran(cConteudo, '}', " ")
+        cConteudo := StrTran(cConteudo, '[', " ")
+        cConteudo := StrTran(cConteudo, ']', " ")
+        cConteudo := StrTran(cConteudo, '/', " ")
+        cConteudo := StrTran(cConteudo, '?', " ")
+        cConteudo := StrTran(cConteudo, '.', " ")
+        cConteudo := StrTran(cConteudo, '\', " ")
+        cConteudo := StrTran(cConteudo, '|', " ")
+        cConteudo := StrTran(cConteudo, ':', " ")
+        cConteudo := StrTran(cConteudo, ';', " ")
         cConteudo := StrTran(cConteudo, '"', " ")
         cConteudo := StrTran(cConteudo, '°', " ")
         cConteudo := StrTran(cConteudo, 'ª', " ")
       Next 
 
       RecLock("SB1",.F.)
-        B1_DESC := cConteudo
+        B1_DESC := AllTrim(cConteudo)
       SB1->(MSUnlock())
 
     EndIF
 
-  (__cAlias)->(DBSkip())
+  (_cAlias)->(DBSkip())
   End 
 
   (_cAlias)->(DbCloseArea())
