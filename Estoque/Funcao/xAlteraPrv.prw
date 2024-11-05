@@ -1,39 +1,95 @@
+#INCLUDE "Totvs.ch"
+#INCLUDE 'Protheus.ch'
 #INCLUDE "RWMAKE.CH"
 #INCLUDE "TBICONN.CH"
-#INCLUDE 'Protheus.ch'
 #INCLUDE 'FWMVCDef.ch'
+#INCLUDE "APWEBSRV.CH"
+#INCLUDE "totvswebsrv.ch"
+#INCLUDE "FWEVENTVIEWCONSTS.CH"
 
 /*/{Protheus.doc} xAlteraDado
   Carga de dados para alteração
   @type Function de Usuario
   @author TOTVS Recife (Elvis Siqueira)
-  @since 22/08/2023
+  @since 05/11/2024
   @version 1.0
   /*/
 
 User Function xAlteraPrv()
+  
+  Processa({|| fProcess()}, "Filtrando...")
+
+Return 
+
+Static Function fProcess()
   Local aArea := FwGetArea()
+  Local cConteudo := ""
   Local cQry  := ""
   Local _cAlias := GetNextAlias()
+  Local nTotal := 0
+  Local nAtual := 0
+  Local nY
 
-  cQry := "  SELECT CFC.CFC_UFORIG, CFC.CFC_UFDEST, CFC.CFC_CODPRD, SB1.B1_CONV  FROM " + RetSqlName("CFC") + " CFC "
-  cQry += "  INNER JOIN  " + RetSqlName("SB1") + " SB1 "
-  cQry += "  ON SB1.B1_COD = CFC.CFC_CODPRD "
-  cQry += "  WHERE CFC.D_E_L_E_T_ <> '*' "
-  cQry += "    AND SB1.D_E_L_E_T_ <> '*' "
-  cQry += "    AND SB1.B1_FILIAL = " + xFilial("SB1") + " "
-  cQry += "    AND SB1.B1_GRUPO IN ('071700','072700') "
+  cQry := "  SELECT SB1.B1_COD, SB1.B1_DESC FROM " + RetSqlName("SB1") + " SB1 "
+  cQry += "  WHERE SB1.D_E_L_E_T_ <> '*' "
+  cQry += "    AND SB1.B1_FILIAL = '" + xFilial("SB1") + "' "
   cQry := ChangeQuery(cQry)
 	DbUseArea(.T., "TOPCONN", TcGenQry(,, cQry), _cAlias)
+  Count To nTotal
+  ProcRegua(nTotal)
 
-  DBSelectArea("CFC")
+  (_cAlias)->(DbGoTop())
+
+  DBSelectArea("SB1")
 
   While (_cAlias)->(!Eof())
-    IF CFC->(MSSeek(xFilial("CFC") + (_cAlias)->CFC_UFORIG + (_cAlias)->CFC_UFDEST + (_cAlias)->CFC_CODPRD ))
-      RecLock("CFC",.F.)
-        CFC_VL_ICM := ( CFC_VL_ICM * (_cAlias)->B1_CONV )
-      CFC->(MSUnlock())
-    EndIF 
+    
+    nAtual++
+
+    MsProcTxt("Processando registro " + cValToChar(nAtual) + " de " + cValToChar(nTotal) + "...")
+
+    IF SB1->(MSSeek(xFilial("SB1") + (_cAlias)->B1_COD ))
+      
+      cConteudo := FwNoAccent((_cAlias)->B1_DESC)
+
+      For nY := 1 To 12
+        cConteudo := StrTran(cConteudo, "'", " ")
+        cConteudo := StrTran(cConteudo, "#", " ")
+        cConteudo := StrTran(cConteudo, "%", " ")
+        cConteudo := StrTran(cConteudo, "*", " ")
+        cConteudo := StrTran(cConteudo, "&", "E")
+        cConteudo := StrTran(cConteudo, ">", " ")
+        cConteudo := StrTran(cConteudo, "<", " ")
+        cConteudo := StrTran(cConteudo, "!", " ")
+        cConteudo := StrTran(cConteudo, "@", " ")
+        cConteudo := StrTran(cConteudo, "$", " ")
+        cConteudo := StrTran(cConteudo, "(", " ")
+        cConteudo := StrTran(cConteudo, ")", " ")
+        cConteudo := StrTran(cConteudo, "_", " ")
+        cConteudo := StrTran(cConteudo, "=", " ")
+        cConteudo := StrTran(cConteudo, "+", " ")
+        cConteudo := StrTran(cConteudo, "{", " ")
+        cConteudo := StrTran(cConteudo, "}", " ")
+        cConteudo := StrTran(cConteudo, "[", " ")
+        cConteudo := StrTran(cConteudo, "]", " ")
+        cConteudo := StrTran(cConteudo, "/", " ")
+        cConteudo := StrTran(cConteudo, "?", " ")
+        cConteudo := StrTran(cConteudo, ".", " ")
+        cConteudo := StrTran(cConteudo, "\", " ")
+        cConteudo := StrTran(cConteudo, "|", " ")
+        cConteudo := StrTran(cConteudo, ":", " ")
+        cConteudo := StrTran(cConteudo, ";", " ")
+        cConteudo := StrTran(cConteudo, '"', " ")
+        cConteudo := StrTran(cConteudo, '°', " ")
+        cConteudo := StrTran(cConteudo, 'ª', " ")
+      Next 
+
+      RecLock("SB1",.F.)
+        B1_DESC := cConteudo
+      SB1->(MSUnlock())
+
+    EndIF
+
   (__cAlias)->(DBSkip())
   End 
 
