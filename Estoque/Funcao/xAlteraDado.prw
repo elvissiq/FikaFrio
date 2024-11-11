@@ -185,7 +185,7 @@ While !FT_FEOF()
 			        */
               RecLock("SA1",.F.)
               For nY := 3 To Len(aRegistro)
-                &('SB1->'+aRegistro[nY,1]) := aRegistro[nY,2]
+                &('SA1->'+aRegistro[nY,1]) := aRegistro[nY,2]
               Next 
               SA1->(MSUnlock())
             EndIF
