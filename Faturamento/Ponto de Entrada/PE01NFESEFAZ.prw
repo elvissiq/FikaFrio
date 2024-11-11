@@ -80,7 +80,13 @@ User Function PE01NFESEFAZ()
             SD2->(MsSeek(xFilial("SD2")+aNota[2]+aNota[1]+aNota[7]+aNota[8]+aProd[_nI][2]+STrZero(aProd[_nI][1],2))) //D2_FILIAL+D2_DOC+D2_SERIE+D2_CLIENTE+D2_LOJA+D2_COD+D2_ITEM
 
             If !Empty(SD2->D2_PEDIDO)
-                aProd[_nI][4] := Alltrim(aProd[_nI][4]) + " ;Pedido: " + Alltrim(SD2->D2_PEDIDO)
+                DBSelectArea("SC6")
+                SC6->(DBSetOrder(2))
+                IF SC6->(MsSeek(xFilial("SC6") + aProd[_nI][2] + SD2->D2_PEDIDO ))
+                    If !Empty(SC6->C6_PEDCLI)
+                        aProd[_nI][4] := Alltrim(aProd[_nI][4]) + " ;Pedido: " + Alltrim(SC6->C6_PEDCLI)
+                    EndIF
+                EndIF
             EndIF 
 
             If !Empty(SD2->D2_LOTECTL)
