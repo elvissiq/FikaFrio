@@ -25,8 +25,26 @@ User Function M410VRES()
   Local nCubagem  := 0
   Local nTtVend   := 0
   Local cDsRegiao := ""
- 
+  Local cQry      := ""
+  Local cUltSeq   := ""
+
   If SC5->C5_TPCARGA == "1"
+    // -- Pegar último sequêncial do FUSION
+    // ------------------------------------
+     cQry := "Select Max(SC9.C9_XSEQFUS) as ULTSEQ from " + RetSqlName("SC9") + " SC9"
+     cQry += "  where SC9.D_E_L_E_T_ <> '*'"
+     cQry += "    and SC9.C9_FILIAL  = '" + FWxFilial("SC9") + "'"
+     cQry += "    and SC9.C9_PEDIDO  = '" + SC5->C5_NUM + "'"
+     cQry := ChangeQuery(cQry)
+     dbUseArea(.T.,"TopConn",TCGenQry(,,cQry),"QSC9",.F.,.T.) 
+
+     If ! QSC9->(Eof())
+        cUltSeq := QSC9->ULTSEQ
+     EndIf
+
+     QSC9->(dbCloseArea())
+    // ------------------------------------
+
      oFusion:aRegistro := {}
 
      cDsRegiao := AllTrim(Posicione("SX5",1,FWxFilial("SX5") + "A2" + SC5->C5_XREGIAO,"X5_DESCRI"))
@@ -65,12 +83,13 @@ User Function M410VRES()
                                  SC5->C5_LOJACLI,;                   // 17 - Loja do Cliente
                                  SC5->C5_VEND1,;                     // 18 - Código do Vendedor
                                  SC5->C5_EMISSAO,;                   // 19 - Data da emissão do pedido
-                                 Val(SC5->C5_XSEQFUS),;              // 20 - Sequencial da FUSION
+                                 IIf(Empty(cUltSeq),0,Val(cUltSeq)),;// 20 - Sequencial da FUSION
                                  "",;                                // 21 - Número da Carga
                                  SC5->C5_XREGIAO,;                   // 22 - Código da Região
                                  cDsRegiao,;                         // 23 - Descrição da Região
-                                 0})                                 // 24 - Número do registro  
-
+                                 0,;                                 // 24 - Número do registro
+                                 "L"})                               // 25 - Status do item (L-Liberado/B-Bloqueado)
+  
         nPeso    += SC6->C6_QTDVEN * SB1->B1_PESO
         nCubagem += SC6->C6_QTDVEN * (SB5->B5_COMPR * SB5->B5_ALTURA * SB5->B5_LARG)
         nTtVend  += SC6->C6_PRCVEN * SC6->C6_QTDVEN
@@ -91,7 +110,7 @@ User Function M410VRES()
      aRet := oFusion:Enviar("saveEntregaServico")     // Enviar para FUSION
 
      If aRet[01]
-        ApMsgInfo(aRet[02])
+        ApMsgInfo("Pedido enviado para FUSION com sucesso.")
       else
         ApMsgAlert(aRet[02],"ATENÇÃO") 
 

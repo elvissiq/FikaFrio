@@ -76,7 +76,7 @@ User Function FFFATC02()
   oTempTPED:AddIndex("01", {"T3_XSEQFUS","T3_ITEM","T3_PRODUTO"})
   oTempTPED:Create()
 
-  FWExecView("Consulta Pedido x Carga","PFATF003",MODEL_OPERATION_INSERT,,{|| .T.},,50,aButtons)
+  FWExecView("Consulta Pedido x Carga","FFFATC02",MODEL_OPERATION_INSERT,,{|| .T.},,50,aButtons)
 
   oTempTCAB:Delete()
   oTempTCRG:Delete()
@@ -195,7 +195,7 @@ Static Function fn01MCRG()
   oStruct:AddTable("TCRG",{"T2_PEDIDO","T2_CARGA"},"Carga")
   oStruct:AddField(""       ,""       ,"T2_STATUS" ,"C",15,0,Nil,Nil,{},.F.,,.F.,.F.,.T.)
   oStruct:AddField("Pedido" ,"Pedido" ,"T2_PEDIDO" ,"C",TamSX3("C5_NUM")[1],0,Nil,Nil,{},.F.,,.F.,.F.,.F.)
-  oStruct:AddField("Seq"    ,"Seq"    ,"T2_XSEQFUS","C",TamSX3("C5_XSEQFUS")[1],0,Nil,Nil,{},.F.,,.F.,.F.,.F.)
+  oStruct:AddField("Seq"    ,"Seq"    ,"T2_XSEQFUS","C",TamSX3("C9_XSEQFUS")[1],0,Nil,Nil,{},.F.,,.F.,.F.,.F.)
   oStruct:AddField("Item"   ,"Item"   ,"T2_ITEM"   ,"C",2,0,Nil,Nil,{},.F.,,.F.,.F.,.F.)
   oStruct:AddField("FUSION" ,"FUSION" ,"T2_PEDFUS" ,"C",nTamPFus,0,Nil,Nil,{},.F.,,.F.,.F.,.F.)
   oStruct:AddField("Carga"  ,"Carga"  ,"T2_CARGA"  ,"C",TamSX3("C9_CARGA")[1],0,Nil,Nil,{},.F.,,.F.,.F.,.F.)
@@ -432,7 +432,7 @@ User Function fn01VPV(pPedido)
 
   cQuery := "Select SC9.C9_PEDIDO, SC9.C9_CLIENTE, SC9.C9_LOJA, SC9.C9_PRODUTO, SC9.C9_QTDLIB, SA1.A1_NOME,"
   cQuery += "       SC9.C9_PRCVEN, SC9.C9_NFISCAL, SC9.C9_SERIENF, SC9.C9_CARGA, SB1.B1_DESC, SC5.C5_EMISSAO,"
-  cQuery += "       Case When SC5.C5_XSEQFUS = '' then '' else SC9.C9_XSEQFUS end SEQFUS,"
+  cQuery += "       Case When SC9.C9_XSEQFUS = '' then '' else SC9.C9_XSEQFUS end SEQFUS,"
   cQuery += "       Case When SC9.C9_CARGA <> '' then (Select DAK.DAK_DTACCA from " + RetSqlName("DAK") + " DAK"
   cQuery += "                                       where DAK.D_E_L_E_T_ <> '*'"
   cQuery += "                                         and DAK.DAK_FILIAL  = '" + FWxFilial("DAK") + "'"

@@ -6,7 +6,7 @@
 // ----------------------------------------------
 /*/ Classe ACLSFUSION
 
-    Classe para integrção do FUSION x PROTHEUS.
+   Classe para integrção do FUSION x PROTHEUS.
 
   @author Anderson Almeida - TOTVS
   @since   26/08/2024 - Desenvolvimento da Rotina.
@@ -24,29 +24,33 @@ Class PCLSFUSION
  // --- Definição dos métodos
  // -------------------------
   Method New() Constructor
-  Method sendClientes(pCliente,pLoja)                      // Montar requisição Cadastro de Cliente
-  Method sendVeiculos(pCodigo)                             // Montar requisição Cadastro de Veí­culo
-  Method sendMotoristas(pCodigo)                           // Montar requisição Cadastro de Motorista
-  Method sendAjudantes(pCodigo)                            // Montar requisição Cadastro de Ajudante
-  Method LerPedidoVenda(pPedido,pSeq,pVldSC5,pExcluido)    // Verificar se o pedido de venda está valido para envio e montar
-  Method saveEntregaServico(pStatus,pForma,lCarga)         // Montar de Pedido de Venda para envio
-  Method detalheCarga(pCarga,pDtInicio,pDtFim)             // Montar requisição do Detalhe da Carga
-  Method getIntErpFilial()                                 // Montar requisição para importação de Carga 
-  Method setIntErp(pIntId,pCarga)                          // Informar ao FUSION a gravação da carga
-  Method AltCarga(pForma,pPedido,pRecno)                   // Montar requisição e enviar para FUSION 
-  Method atualizaCarga(pJsonData)                          // Monta requisição para atualizar dados da carga
-  Method Enviar(pMetodo,pSchedule)                         // Enviar para o FUSION
+  Method sendClientes(pCliente,pLoja)                      // Montar requisição Cadastro de Cliente.
+  Method sendVeiculos(pCodigo)                             // Montar requisição Cadastro de Veí­culo.
+  Method sendMotoristas(pCodigo)                           // Montar requisição Cadastro de Motorista.
+  Method sendAjudantes(pCodigo)                            // Montar requisição Cadastro de Ajudante.
+  Method pegarPrxSeq(pPedido)                              // Pegar o próximo sequencial do pedido no FUSION. 
+  Method lerPedidoVenda(pPedido,pSeq,pSC5,pNf,pSerie)      // Verificar se o pedido de venda está valido para envio e montar.
+  Method saveEntregaServico(pStatus,pForma,lCarga)         // Montar de Pedido de Venda para envio.
+  Method detalheCarga(pCarga,pDtInicio,pDtFim)             // Montar requisição do Detalhe da Carga.
+  Method getIntErp()                                       // Montar requisição para importação de Carga. 
+  Method setIntErp(pIntId,pCarga)                          // Informar ao FUSION a gravação da carga.
+  Method altCarga(pForma,pPedido,pRecno)                   // Montar requisição e enviar para FUSION. 
+  Method atualizaCarga(pJsonData)                          // Monta requisição para atualizar dados da carga.
+  Method Enviar(pMetodo,pSchedule)                         // Enviar para o FUSION.
 EndClass
 
-//-------------------------------------------------------------------
+//---------------------------------------------------
 /*/{protheusDoc.marcadores_ocultos} PCLSFUSION()
-  Definição do construtor da classe
+  
+  Metodo Construtor
+
+   Definição do construtor da classe
 
   @author Anderson Almeida (TOTVS NE)
   @version P12.1.17
   @since 24/03/2021	
 /*/
-//-------------------------------------------------------------------
+//----------------------------------------------------
 Method New() Class PCLSFUSION
   self:cLogin     := SuperGetMv("FF_XFUSUSE",.F.,"")
   self:cPassword  := SuperGetMv("FF_XFUSPWD",.F.,"")
@@ -55,9 +59,10 @@ Method New() Class PCLSFUSION
   self:oParseJSON := Nil
 Return Self
 
-//-------------------------------------------------------------------
-/*/{protheusDoc.marcadores_ocultos} PCLSFUSION
-  Objeto sendClientes
+//----------------------------------------------------
+/*/ Classe PCLSFUSION
+  
+  Metodo sendClientes
   
     Montagem do Cadastro de Cliente
 
@@ -65,7 +70,7 @@ Return Self
   @version P12.1.17
   @since 31/03/2021	
 /*/
-//-------------------------------------------------------------------
+//-----------------------------------------------------
 Method sendClientes(pCliente,pLoja) Class PCLSFUSION
   Local nPrxId  := 0
   Local cA1Cod  := pCliente
@@ -157,20 +162,19 @@ Method sendClientes(pCliente,pLoja) Class PCLSFUSION
   self:cBody += '</soapenv:Envelope>'
 
   MemoWrite("C:\Temp\Cliente.xml",self:cBody)
-
 Return .T.
 
-//-------------------------------------------------------------------
+//-----------------------------------------------
 /*/ Classe PCLSFUSION
+  
   Objeto sendVeiculos
   
     Montagem do Cadastro de Veí­culo
 
   @author Anderson Almeida (TOTVS NE)
-  @version P12.1.17
   @since 31/03/2021	
 /*/
-//-------------------------------------------------------------------
+//------------------------------------------------
 Method sendVeiculos(pCodigo) Class PCLSFUSION
   Local nPrxId  := 0
   Local cCodigo := pCodigo
@@ -242,20 +246,19 @@ Method sendVeiculos(pCodigo) Class PCLSFUSION
   self:cBody += '</soapenv:Envelope>'
 
   MemoWrite("C:\Temp\Veiculo.xml",self:cBody)
-
 Return .T.
 
-//-------------------------------------------------------------------
-/*/{protheusDoc.marcadores_ocultos} PCLSFUSION
+//-------------------------------------------------
+/*/ Classe PCLSFUSION
+
   Objeto sendMotoristas
   
     Montagem do Cadastro de Motorista
 
   @author Anderson Almeida (TOTVS NE)
-  @version P12.1.17
   @since 31/03/2021	
 /*/
-//-------------------------------------------------------------------
+//-------------------------------------------------
 Method sendMotoristas(pCodigo) Class PCLSFUSION
   Local cCodigo := pCodigo
 
@@ -283,7 +286,7 @@ Method sendMotoristas(pCodigo) Class PCLSFUSION
   self:cBody += '        ['  
   self:cBody += '         {'
   self:cBody += '          "campo_alt":"NEW_825",'
-  self:cBody += '          "seq_id":"' + DA4->DA4_COD + '",'
+  self:cBody += '          "seq_id": ' + DA4->DA4_COD + ','
   self:cBody += '          "codigo_erp":"' + DA4->DA4_COD + '",'
   self:cBody += '          "nome":"' + FwNoAccent(AllTrim(DA4->DA4_NOME)) + '",'
   self:cBody += '          "cpf":"' + DA4->DA4_CGC + '",'
@@ -307,21 +310,19 @@ Method sendMotoristas(pCodigo) Class PCLSFUSION
   self:cBody += '   </urn:sendMotoristas>'
   self:cBody += ' </soapenv:Body>'
   self:cBody += '</soapenv:Envelope>'
-
-  MemoWrite("C:\Temp\Motorista.xml",self:cBody)
 Return .T.
 
-//-------------------------------------------------------------------
-/*/{protheusDoc.marcadores_ocultos} PCLSFUSION
+//------------------------------------------------
+/*/ Classe PCLSFUSION
+
   Objeto sendAjudantes
   
     Montagem do Cadastro de Ajudantes
 
   @author Anderson Almeida (TOTVS NE)
-  @version P12.1.17
   @since 31/03/2021	
 /*/
-//-------------------------------------------------------------------
+//------------------------------------------------
 Method sendAjudantes(pCodigo) Class PCLSFUSION
   Local cCodigo := pCodigo
 
@@ -349,7 +350,7 @@ Method sendAjudantes(pCodigo) Class PCLSFUSION
   self:cBody += '        ['  
   self:cBody += '         {'
   self:cBody += '          "campo_alt":"NEW_825",'
-  self:cBody += '          "seq_id":"' + DAU->DAU_COD + '",'
+  self:cBody += '          "seq_id": ' + DAU->DAU_COD + ','
   self:cBody += '          "codigo_erp":"' + DAU->DAU_COD + '",'
   self:cBody += '          "nome":"' + FwNoAccent(AllTrim(DAU->DAU_NOME)) + '",'
   self:cBody += '          "cpf":"' + DAU->DAU_CGC + '",'
@@ -373,33 +374,63 @@ Method sendAjudantes(pCodigo) Class PCLSFUSION
   self:cBody += '   </urn:sendMotoristas>'
   self:cBody += ' </soapenv:Body>'
   self:cBody += '</soapenv:Envelope>'
-
-  MemoWrite("C:\Temp\Ajudante.xml",self:cBody)
 Return .T.
 
-//-------------------------------------------------------------------
-/*/{protheusDoc.marcadores_ocultos} PCLSFUSION
-  Objeto LerPedidoVenda
-  
-  Ler Pedido de Venda
+//------------------------------------------------
+/*/ Classe PCLSFUSION
 
-  @parámetro pPedido   - Número do Pedido de Venda
-             pSeq      - Sequencial do pedido. Para o primeiro é "0"
-                         e não manda para a FUSION o sequencial
-             pBloq     - .T. precisa validar se o pedido está bloqueado
-                         .F. precisa validar se o pedido está liberado
-             pExcluido - .T. pedido excluido ou .F. não
+  Objeto sendAjudantes
+  
+   Pegar o próximo sequencial do pedido no FUSION. 
+
+  @author Anderson Almeida (TOTVS NE)
+  @since 01/10/2024	
+/*/
+//------------------------------------------------
+Method pegarPrxSeq(pPedido, pRecSC9) Class PCLSFUSION
+  Local cRet := ""
+  Local cQry := ""
+
+  cQry := "Select Max(SC9.C9_XSEQFUS) as ULTSEQ from " + RetSqlName("SC9") + " SC9"
+  cQry += "  where SC9.D_E_L_E_T_ <> '*'"
+  cQry += "    and SC9.C9_FILIAL  = '" + FWxFilial("SC9") + "'"
+  cQry += "    and SC9.C9_PEDIDO  = '" + pPedido + "'"
+  cQry += "    and SC9.R_E_C_N_O_ = " + Str(pRecSC9) 
+  cQry := ChangeQuery(cQry)
+  dbUseArea(.T.,"TopConn",TCGenQry(,,cQry),"QSC9",.F.,.T.)     
+  
+  If ! QSC9->(Eof())
+     cRet := QSC9->ULTSEQ
+  EndIf
+
+  QSC9->(dbCloseArea())
+Return cRet
+
+//----------------------------------------------------------------------
+/*/ Classe PCLSFUSION
+
+   Objeto lerPedidoVenda
+  
+   Ler Pedido de Venda
+
+  @parámetro pPedido - Número do Pedido de Venda.
+             pSeq    - Sequencial do pedido. Para o primeiro é "0"
+                       e não manda para a FUSION o sequencial.
+             pBloq   - .T. precisa validar se o pedido está bloqueado.
+                       .F. precisa validar se o pedido está liberado.
+             pNF     - Número da Nota Fiscal de saída.
+             pSerie  - Número da Serie da Nota Fiscal de saída.  
              
   @author Anderson Almeida (TOTVS NE)
-  @version P12.1.17
-  @since 31/03/2021	
+  @since   17/10/2024	
 /*/
-//-------------------------------------------------------------------
-Method LerPedidoVenda(pPedido,pSeq,pSC5,pExcluido) Class PCLSFUSION
+//----------------------------------------------------------------------
+Method lerPedidoVenda(pPedido,pSeq,pSC5,pNF,pSerie) Class PCLSFUSION
   Local cC5Num    := pPedido
   Local nSeq      := pSeq
   Local lLerSC5   := pSC5
-  Local lExcluido := pExcluido
+  Local cNumNF    := pNF
+  Local cSerieNF  := pSerie
   Local aRet      := {.T.,"",{},{}}
   Local aRegLib   := {}
   Local aRegBloq  := {}
@@ -412,29 +443,23 @@ Method LerPedidoVenda(pPedido,pSeq,pSC5,pExcluido) Class PCLSFUSION
   Local nBCubagem := 0
   Local nBTtVend  := 0
 
-  If ! lExcluido
-     dbSelectArea("SC5")
-     SC5->(dbSetOrder(1))
+  dbSelectArea("SC5")
+  SC5->(dbSetOrder(1))
 
-     If ! SC5->(dbSeek(SC5->C5_FILIAL + cC5Num))
-        aRet[01] := .F.
-        aRet[02] := "Pedido Venda não encontrado."
+  If ! SC5->(dbSeek(SC5->C5_FILIAL + cC5Num))
+     aRet[01] := .F.
+     aRet[02] := "Pedido Venda não encontrado."
 
-        Return aRet
-     EndIf
+     Return aRet
   EndIf
-  // If Empty(SC5->C5_LIBEROK)
+
   If lLerSC5
      cQuery := "Select SC6.C6_PRODUTO as PRODUTO, SC6.C6_QTDVEN as QTDE, SC6.C6_PRCVEN as PRCVEN,"
      cQuery += "       '' as CARGA, SB1.B1_DESC, SB1.B1_UM, SB1.B1_POSIPI, SB1.B1_PESO, SB5.B5_ALTURLC,"
      cQuery += "       SB5.B5_COMPRLC, SB5.B5_LARGLC, 'B' as BLOQ"
      cQuery += "  from " + RetSqlName("SC6") + " SC6, " + RetSqlName("SB1") + " SB1, " + RetSqlName("SB5") + " SB5"
      cQuery += "   where SC6.C6_FILIAL  = '" + SC5->C5_FILIAL + "'"
-
-     If ! lExcluido
-        cQuery += " and SC6.D_E_L_E_T_ <> '*'"
-     EndIf
-
+     cQuery += "     and SC6.D_E_L_E_T_ <> '*'"
      cQuery += "     and SC6.C6_NUM     = '" + SC5->C5_NUM + "'"
      cQuery += "     and SB1.D_E_L_E_T_ <> '*'"
      cQuery += "     and SB1.B1_FILIAL  = '" + xFilial("SB1") + "'"
@@ -450,19 +475,8 @@ Method LerPedidoVenda(pPedido,pSeq,pSC5,pExcluido) Class PCLSFUSION
      cQuery += "   where SC9.D_E_L_E_T_ <> '*'"
      cQuery += "     and SC9.C9_FILIAL  = '" + SC5->C5_FILIAL + "'"
      cQuery += "     and SC9.C9_PEDIDO  = '" + SC5->C5_NUM + "'"
-     /*
-      If !(AllTrim(FunName()) $ ("MATA460A/MATA460B/OMSA200"))
-      cQuery += "     and SC9.C9_CARGA   = ' '"
-      cQuery += "     and SC9.C9_NFISCAL = ' '"
-      
-      If Empty(SC5->C5_XSEQFUS) .or. AllTrim(FunName()) == "MATA410"
-        cQuery += " and SC9.C9_XSEQFUS = '" + SC5->C5_XSEQFUS + "'"
-      ElseIf !IsInCallStack("U_PFUSCARGAINI") .And. !IsInCallStack("U_M460FIM")
-        cQuery += " and SC9.C9_XSEQFUS <> '" + SC5->C5_XSEQFUS + "'"
-      EndIf
-     
-     EndIF 
-     */
+     cQuery += "     and SC9.C9_NFISCAL = '" + cNumNF + "'"
+     cQuery += "     and SC9.C9_SERIENF = '" + cSerieNF + "'"
      cQuery += "     and SB1.D_E_L_E_T_ <> '*'"
      cQuery += "     and SB1.B1_FILIAL  = '" + xFilial("SB1") + "'"
      cQuery += "     and SB1.B1_COD     = SC9.C9_PRODUTO"
@@ -524,7 +538,7 @@ Method LerPedidoVenda(pPedido,pSeq,pSC5,pExcluido) Class PCLSFUSION
                      SC5->C5_XREGIAO,;                       // 22 - Código da Região
                      cDsRegiao,;                             // 23 - Descrição da Região
                      QPSQ->RECNO,;                           // 24 - Número do registro
-                     'L'})                                   // 25 - Status do item (L-Liberado/B-Bloqueado)
+                     "L"})                                   // 25 - Status do item (L-Liberado/B-Bloqueado)
 
        nLPeso    += (QPSQ->QTDE * QPSQ->B1_PESO)
        nLCubagem += QPSQ->QTDE * (QPSQ->B5_COMPRLC * QPSQ->B5_ALTURLC * QPSQ->B5_LARGLC)
@@ -560,6 +574,7 @@ Method LerPedidoVenda(pPedido,pSeq,pSC5,pExcluido) Class PCLSFUSION
                       cDsRegiao,;                             // 23 - Descrição da Região
                       0,;                                     // 24 - Número do registro
                       'B'})                                   // 25 - Status do item (L-Liberado/B-Bloqueado)
+       
        nBPeso    += (QPSQ->QTDE * QPSQ->B1_PESO)
        nBCubagem += QPSQ->QTDE * (QPSQ->B5_COMPRLC * QPSQ->B5_ALTURLC * QPSQ->B5_LARGLC)
        nBTtVend  += (QPSQ->PRCVEN * QPSQ->QTDE)
@@ -596,7 +611,7 @@ Method LerPedidoVenda(pPedido,pSeq,pSC5,pExcluido) Class PCLSFUSION
   aRet[04] := aRegLib
 Return aRet
 
-//-------------------------------------------------
+//--------------------------------------------------
 /*/{protheusDoc.marcadores_ocultos} PCLSFUSION
   Montar a requisição do pedido de venda
 
@@ -606,16 +621,15 @@ Return aRet
                          'N' = Não forma carga 
               lCarga   - .T. = Número da carga
                          .F. = Sem número da carga 
-              pNFiscal - Número da Nota Fiscal do Pedido de Venda
-              pSerieNF - Série da Nota Fiscal do Pedido de Venda
+              pNFiscal - Número da Nota Fiscal
+                         do Pedido de Venda
+              pSerieNF - Série da Nota Fiscal do
+                         Pedido de Venda
 
   @author Anderson Almeida (TOTVS NE)
-  @since 02/04/2021	
-  @since 02/05/2023 (Cubagem) Elvis Siqueira
-  @since 11/12/2023 (Condição de Pagamento + Número da Nota Fiscal) Elvis Siqueira
-  @since 24/03/2024 (Envio do número da carga quando realizada manutencao na carga) Elvis Siqueira
+  @since   17/10/2024	
 /*/
-//-------------------------------------------------
+//--------------------------------------------------
 Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCLSFUSION 
   Local cStatusFUS := pStatus  // N - Normal ou B - Bloqueado
   Local nId        := 0
@@ -623,37 +637,36 @@ Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCL
   Local cCondPag   := Alltrim(Posicione("SE4",1,FWxFilial("SE4")+SC5->C5_CONDPAG,"E4_DESCRI"))
   Local lEnvBlq    := SuperGetMV("MV_XENVBLQ",.F.,.F.)
   Local cFilFus    := ""
-  Local _cAliasC9  := "TSC9"+FWTimeStamp(1)
-  Local cQrySC9    := ""
+  Local cQry       := ""
 
   Default cNFiscal := IIF(ValType(pNFiscal) != "U", pNFiscal, Alltrim(SC5->C5_NOTA))
   Default cSerieNF := IIF(ValType(pSerieNF) != "U", pSerieNF, Alltrim(SC5->C5_SERIE))
 
   If lCarga
-     cQrySC9 := "SELECT * FROM "+ RetSqlName("SC9") +" SC9 "
-     cQrySC9 += " WHERE D_E_L_E_T_ <> '*' "
-     cQrySC9 += "   AND	C9_FILIAL  = '" + SC5->C5_FILIAL + "'"
-     cQrySC9 += "   AND	C9_PEDIDO  = '" + SC5->C5_NUM + "'"
-     cQrySC9 := ChangeQuery(cQrySC9)
-     dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQrySC9),_cAliasC9,.T.,.T.)
+     cQry := "Select * from "+ RetSqlName("SC9") +" SC9 "
+     cQry += "  where SC9.D_E_L_E_T_ <> '*' "
+     cQry += "    and SC9.C9_FILIAL  = '" + SC5->C5_FILIAL + "'"
+     cQry += "    and SC9.C9_PEDIDO  = '" + SC5->C5_NUM + "'"
+     cQry := ChangeQuery(cQry)
+     dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQry),"TSC9",.T.,.T.)
     
-     While (_cAliasC9)->(!Eof())
-        If ! Empty((_cAliasC9)->C9_CARGA)
-          self:aRegistro[01][21] := (_cAliasC9)->C9_CARGA
+     While ! TSC9->(Eof())
+        If ! Empty(TSC9->C9_CARGA)
+          self:aRegistro[01][21] := TSC9->C9_CARGA
 
           Exit
         EndIf
 
-        (_cAliasC9)->(DBSkip())
-    EndDo
+        TSC9->(dbSkip())
+     EndDo
 
-    (_cAliasC9)->(DbCloseArea())
+     TSC9->(dbCloseArea())
   EndIf
 
   If self:aRegistro[01][20] == 0
-     cPedido := IIf(! Empty(self:aRegistro[01][15]), cFilFus + "_" + self:aRegistro[01][15],"")
+     cPedido := self:aRegistro[01][15]
    else
-     cPedido := IIf(! Empty(self:aRegistro[01][15]), cFilFus + "_" + self:aRegistro[01][15] + "_" + StrZero(self:aRegistro[01][20],TamSX3("C5_XSEQFUS")[1]),"")
+     cPedido := self:aRegistro[01][15] + "_" + StrZero(self:aRegistro[01][20],TamSX3("C9_XSEQFUS")[1])
   EndIf
 
   dbSelectArea("SA1")
@@ -692,9 +705,9 @@ Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCL
   self:cBody += '          "valor": "' + AllTrim(Str(self:aRegistro[01][14],16,2)) + '",'
   self:cBody += '          "peso": "' + AllTrim(Str(self:aRegistro[01][12],16,2)) + '",'
   self:cBody += '          "valor_st": "0",'
-  self:cBody += '          "empresa_fat": "' + cFilFus + '",'
-  self:cBody += '          "empresa_log": "' + cFilFus + '",'
-  self:cBody += '          "empresa_digit": "' + cFilFus + '",'
+  self:cBody += '          "empresa_fat": "' + cFilAnt + '",'
+  self:cBody += '          "empresa_log": "' + cFilAnt + '",'
+  self:cBody += '          "empresa_digit": "' + cFilAnt + '",'
   self:cBody += '          "pedido_orig": "' + cPedido + '",'
   self:cBody += '          "dt_list_nf": "' + AllTrim(Str(Year(IIf(Empty(SC5->C5_SUGENT),dDataBase,SC5->C5_SUGENT))) + "-" +;
                 StrZero(Month(IIf(Empty(SC5->C5_SUGENT), dDataBase, SC5->C5_SUGENT)),2) + '-' +;
@@ -727,7 +740,7 @@ Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCL
   self:cBody += '          "codigo_cliente": "' + AllTrim(SA1->A1_COD) + AllTrim(SA1->A1_LOJA) + '",'
   self:cBody += '          "cod_segmento": "2",'
   self:cBody += '          "descr_segmento": "ATACADO",'
-  self:cBody += '          "filial_padrao": "' + cFilFus + '",'
+  self:cBody += '          "filial_padrao": "' + cFilAnt + '",'
   self:cBody += '          "data_ult_compra": "' + AllTrim(Str(Year(dDataBase))) + "-" + StrZero(Month(dDataBase),2) +;
                                              '-' + StrZero(Day(dDataBase),2) + " " + Time() + '",'
   self:cBody += '          "forma_pgto_cliente": "1",'
@@ -767,24 +780,21 @@ Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCL
          self:cBody += '   "obs_item": "' + FwNoAccent(AllTrim(self:aRegistro[nId][11])) + '"'
          self:cBody += '  }' + IIf(nId < Len(self:aRegistro),',','') 
       
-      ElseIf ! lEnvBlq .AND. self:aRegistro[nId][25] == 'L' // Só envia produtos liberados
-        
-        self:cBody += '  {'
-        self:cBody += '   "cod_produto_erp": "' + self:aRegistro[nId][01] + '",'
-        self:cBody += '   "descricao": "' + AllTrim(FwNoAccent(self:aRegistro[nId][02])) + '",'
-        self:cBody += '   "unidade": "' + self:aRegistro[nId][03] + '",'
-        self:cBody += '   "qtd": "' + AllTrim(Str(self:aRegistro[nId][04])) + '",'
-        self:cBody += '   "peso": "' + AllTrim(Str(self:aRegistro[nId][05],16,2)) + '",'
-        self:cBody += '   "preco": "' + AllTrim(Str(self:aRegistro[nId][06],16,2)) + '",'
-        self:cBody += '   "subtotal": "' + AllTrim(Str(self:aRegistro[nId][07],16,2)) + '",'
-        self:cBody += '   "valor_icms_st": "' + AllTrim(Str(self:aRegistro[nId][08])) + '",'
-        self:cBody += '   "ncm": "' + self:aRegistro[nId][09] + '",'
-        self:cBody += '   "cst": "' + Str(self:aRegistro[nId][10]) + '",'
-        self:cBody += '   "obs_item": "' + FwNoAccent(AllTrim(self:aRegistro[nId][11])) + '"'
-        self:cBody += '  }' + IIf(nId < Len(self:aRegistro),',','')
-      
+       ElseIf ! lEnvBlq .AND. self:aRegistro[nId][25] == 'L' // Só envia produtos liberados
+              self:cBody += '  {'
+              self:cBody += '   "cod_produto_erp": "' + self:aRegistro[nId][01] + '",'
+              self:cBody += '   "descricao": "' + AllTrim(FwNoAccent(self:aRegistro[nId][02])) + '",'
+              self:cBody += '   "unidade": "' + self:aRegistro[nId][03] + '",'
+              self:cBody += '   "qtd": "' + AllTrim(Str(self:aRegistro[nId][04])) + '",'
+              self:cBody += '   "peso": "' + AllTrim(Str(self:aRegistro[nId][05],16,2)) + '",'
+              self:cBody += '   "preco": "' + AllTrim(Str(self:aRegistro[nId][06],16,2)) + '",'
+              self:cBody += '   "subtotal": "' + AllTrim(Str(self:aRegistro[nId][07],16,2)) + '",'
+              self:cBody += '   "valor_icms_st": "' + AllTrim(Str(self:aRegistro[nId][08])) + '",'
+              self:cBody += '   "ncm": "' + self:aRegistro[nId][09] + '",'
+              self:cBody += '   "cst": "' + Str(self:aRegistro[nId][10]) + '",'
+              self:cBody += '   "obs_item": "' + FwNoAccent(AllTrim(self:aRegistro[nId][11])) + '"'
+             self:cBody += '  }' + IIf(nId < Len(self:aRegistro),',','')
       EndIF 
-  
   Next
 
   self:cBody += '         ],'
@@ -829,41 +839,41 @@ Method detalheCarga(pCarga, pDtInicio, pDtFim) Class PCLSFUSION
   self:cBody += '</soapenv:Envelope>'
 
   MemoWrite("C:\Temp\DetalheCarga.xml",self:cBody)
-
 Return
 
 //-----------------------------------------------
-/*/{protheusDoc.marcadores_ocultos} PCLSFUSION
-  Montar a requisição para importar carga.
+/*/Classe PCLSFUSION
+  Método getIntErp
+  
+   Montar a requisição para importar carga.
 
   @author Anderson Almeida (TOTVS NE)
   @since 28/06/2021	
 /*/
 //-----------------------------------------------
-Method getIntErpFilial(pFilial) Class PCLSFUSION
-
+Method getIntErp() Class PCLSFUSION
   self:cBody := '<soapenv:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
   self:cBody += '   xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"'
   self:cBody += '   xmlns:urn="urn:myInputNamespace">'
   self:cBody += ' <soapenv:Header/>'
   self:cBody += '  <soapenv:Body>'
-  self:cBody += '    <urn:getIntErpFilial soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
+  self:cBody += '    <urn:getIntErp soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
   self:cBody += '      <login xsi:type="xsd:string">' + self:cLogin + '</login>'
   self:cBody += '      <senha xsi:type="xsd:string">' + self:cPassword + '</senha>'
-  self:cBody += '      <filial xsi:type="xsd:string">' + pFilial + '</filial>'
   self:cBody += '      <limite_padrao xsi:type="xsd:string">999</limite_padrao>'
-  self:cBody += '    </urn:getIntErpFilial>'
+  self:cBody += '    </urn:getIntErp>'
   self:cBody += '  </soapenv:Body>'
   self:cBody += ' </soapenv:Envelope>'
 
   MemoWrite("C:\Temp\ImportaCarga.xml",self:cBody)
-
 Return
 
 //-----------------------------------------------
-/*/{protheusDoc.marcadores_ocultos} PCLSFUSION
-  Montar a requisição para informar ao FUSION
-  a gravação da carga no PROTHEUS.
+/*/ Classe PCLSFUSION
+  Método setIntErp
+
+   Montar a requisição para informar ao FUSION
+   a gravação da carga no PROTHEUS.
 
   @author Anderson Almeida (TOTVS NE)
   @since 28/06/2021	
@@ -888,7 +898,6 @@ Method setIntErp(pIntId, pCarga) Class PCLSFUSION
   self:cBody += '</soapenv:Envelope>'
 
   MemoWrite("C:\Temp\GravaCarga.xml",self:cBody)
-
 Return
 
 //-----------------------------------------------
@@ -915,19 +924,18 @@ Method atualizaCarga(pJsonData) Class PCLSFUSION
   self:cBody += '</soapenv:Envelope>'
 
   MemoWrite("C:\Temp\AtualizaCarga.xml",self:cBody)
-
 Return
-//------------------------------------------------------------------------------
-/*/{protheusDoc.marcadores_ocultos} PCLSFUSION
-  Montar a requisição e Enviar para o FUSION as
-  alterações da carga.
+//--------------------------------------------------
+/*/ Classe PCLSFUSION
+
+   Montar a requisição e Enviar para o FUSION as
+   alterações da carga.
 
   @author Anderson Almeida (TOTVS NE)
-  @since 30/06/2021
-  01/11/2023 - Valida se o pedido pode ou não ser enviado (Elvis Siqueira)
+  @since   01/10/2024 
 /*/
-//------------------------------------------------------------------------------
-Method AltCarga(pForma,pPedido,pCarga) Class PCLSFUSION 
+//--------------------------------------------------
+Method altCarga(pForma,pPedido,pCarga) Class PCLSFUSION 
   Local aRet      := {}
   Local nId       := 0
   Local cForma    := pForma
@@ -983,15 +991,16 @@ Method AltCarga(pForma,pPedido,pCarga) Class PCLSFUSION
 Return   
 
 //-------------------------------------------------
-/*/{protheusDoc.marcadores_ocultos} PCLSFUSION
+/*/ Classe PCLSFUSION
+
   Objeto Enviar
+
      Consumir as API's do FUSION (SOAP)
 
   @parámetro pSoap = Corpo da requisição
              pMetodo = Metodo da requisção
-
-  @author  Anderson Almeida (TOTVS NE)
-  @since 05/04/2021	
+  @author Anderson Almeida (TOTVS NE)
+  @since   05/10/2024	
 /*/
 //-------------------------------------------------
 Method Enviar(pMetodo) Class PCLSFUSION
@@ -1007,8 +1016,12 @@ Method Enviar(pMetodo) Class PCLSFUSION
 
  // -- Acessar WebService (Soap) 
  // ----------------------------
-  oWsdl:nTimeout     := 120
-  oWsdl:lSSLInsecure := .T.
+  oWsdl:nTimeout         := 180
+  oWsdl:lSSLInsecure     := .T.
+  oWsdl:lProcResp        := .T.
+  oWsdl:bNoCheckPeerCert := .T.
+  oWsdl:lUseNSPrefix     := .T.
+  oWsdl:lVerbose         := .T.
  
   aRet[01] := oWsdl:ParseURL(cURLFUS)
 
@@ -1041,33 +1054,28 @@ Method Enviar(pMetodo) Class PCLSFUSION
            cRetJson := oJson:FromJson(oXML:cText)
 
            If ValType(cRetJson) == "U"
-              If ValType(oJson["erro_detalhes"]) == "A"
-                 If Len(oJson["erro_detalhes"]) > 0
-                    aRet[01] := .F.
-                    aRet[02] := oJson["erro_detalhes"][1]["descricao"]
+              If cMetodo == "getIntErp"
+                 cRetJson := oJson:FromJson('{"response":' + oXML:cText + '}')
+
+                 If ValType(cRetJson) == "U" .and. ValType(oJson["response"]) == "A"
+                    self:oParseJSON := oJson["response"]
+                    aRet[02]        := oXML:cText
+                 EndIf
+               else
+                 If ValType(oJson["erro_detalhes"]) == "A"
+                    If Len(oJson["erro_detalhes"]) > 0
+                       aRet[01] := .F.
+                       aRet[02] := oJson["erro_detalhes"][1]["descricao"]
+                    EndIf
+                 EndIf
+
+                 If ValType(oJson["success"]) == "A" .and. aRet[01]
+                    If Len(oJson["success"]) > 0 
+                       aRet[01] := .T.
+                       aRet[02] := oXML:cText
+                    EndIf
                  EndIf
               EndIf
-
-              If ValType(oJson["success"]) == "A" .and. aRet[01]
-                 If Len(oJson["success"]) > 0 
-                    aRet[01] := .T.
-                    aRet[02] := oXML:cText
-                 EndIf
-              EndIf
-/*              
-              Do Case
-                 Case cMetodo == "getIntErpFilial"
-                      cRetJson := oJson:FromJson('{"response":' + oXML:cText + '}')
-
-                      If ValType(cRetJson) == "U" .and. ValType(oJson["response"]) == "A"
-                         self:oParseJSON := oJson["response"]
-                         aRet[02] := oXML:cText
-                      EndIf
-          
-                 Case cMetodo <> "detalheCarga" .and. cMetodo <> "getIntErpFilial"
-                      aRet[01] := .F.
-                      aRet[02] := oXML:cText
-              EndCase*/
            else
               If cMetodo == "setIntErp"
                  If AllTrim(oXML:cText) <> "OK"
@@ -1105,5 +1113,5 @@ Method Enviar(pMetodo) Class PCLSFUSION
   Z01->(MsUnlock())
 
   ConfirmSX8()
- // ------------------------------
+ // --------------------------------
 Return aRet

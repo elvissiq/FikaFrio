@@ -93,8 +93,6 @@ WsMethod Get Cons_SQL WsReceive WsService FFWSVW03
 
      If TMP->(Eof())
         cJSonRet += '     "Alerta": "Não existe registro para essa consulta."'
-      else
-
      EndIf
 
      While ! TMP->(Eof())
@@ -206,11 +204,14 @@ Static Function fnGrvReg(oJson, cJSon, cMensag)
   Local cCliente := ""
   Local cLoja    := ""
   Local cProduto := ""
+  Local cOper    := ""
   Local cTES     := ""
   Local oItem    := Nil
 
   Private aDados         := {}
   Private aRegJson       := {}
+  Private aHeader        := {}
+  Private aCols          := {} 
   Private cFilAnt        := ""
   Private cEmpAnt        := ""
   Private cLogError      := ""
@@ -339,13 +340,16 @@ Static Function fnGrvReg(oJson, cJSon, cMensag)
 
                        If aItens[nY][nK][01] == "C6_PRODUTO"
                           cProduto := aItens[nY][nK][02]
+
+                        elseIf aItens[nY][nK][01] == "C6_OPER"
+                               cOper := AllTrim(aItens[nY][nK][02]) 
                        EndIf    
                    Next
- Conout(" ALERT 344")             
+           
                   // -- Achar a TES
                   // --------------
-                   cTES := MaTESInt(2, "01", cCliente, cLoja, "C", cProduto, "C6_TES")
-Conout(" ALERT 348")
+                   cTES := MaTESInt(2,cOper,cCliente,cLoja,"C",cProduto,"C6_TES")
+
                    aAdd(aAux, {"C6_TES", cTES, Nil})
                   // -------------- 
 
@@ -360,30 +364,20 @@ Conout(" ALERT 348")
 
 			              For nY := 1 To Len(aAux)
 				                cAux := AllTrim(aAux[nY])
-			                  cAux := StrTran(cAux,"  "," " )
-				                cAux := StrTran(cAux,chr(10),"" )
-				                cAux := StrTran(cAux,chr(13),"" )
-				                cLog := cAux
+				                cLog += cAux
 			              Next	
                     
                     DisarmTransaction()
-//                  else 
- //                   ConfirmSX8() 
                  EndIf
 			         End Transaction
             EndIf  
          EndIf
-         Conout(" ALERT 376")
-         Conout(cLog)
+
          If ! Empty(cLog)
-         Conout(" ALERT 379")
-         Conout(cLog)
-         Conout(EncodeUTF8(cLog))
             cLogError += EncodeUTF8(cLog)
 			      cJSonAux  := ""
 			      cJSonAux  += '{ "status" : 401,'
 			      cJSonAux  += '  "msg" : "' + cLogError + '" }'
-            Conout(" ALERT 383")
           else
       			cJSonAux := ""
 			      cJSonAux += '{ "status" : 201,'
@@ -605,7 +599,7 @@ Static Function fnPegFil(cCNPJFil, cMensag)
   Local lRet    := .T.
 	Local cCodEmp := ""
   Local cCodFil := ""
-	Conout(" ALERT 581")
+
   OpenSM0("01")
 			
   SM0->(dbGoTop())

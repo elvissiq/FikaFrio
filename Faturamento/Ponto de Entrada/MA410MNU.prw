@@ -21,4 +21,4 @@ User Function MA410MNU()
      aAdd(aRotina,{"Envio FUSION"   ,"U_FFFATM01()",0,3,0,Nil})
      aAdd(aRotina,{"Pedido x FUSION","U_FFFATC02()",0,3,0,Nil})
   EndIf 
-Return Nil 
+Return 

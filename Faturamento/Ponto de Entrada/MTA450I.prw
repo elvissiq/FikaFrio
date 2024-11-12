@@ -4,9 +4,10 @@
 
 //-------------------------------------------------------
 /*/ Rotina MATA450A
+
   Ponto de entrada MTA450I
 
-   Pertence a rotina de liberação de crédito, MATA450. 
+   Pertence a rotina de Liberação de Crédito, MATA450. 
    Executado apos atualizacao da liberacao de pedido.
     
    Implementado para:
@@ -19,12 +20,12 @@
 User Function MTA450I()
   Local aArea   := GetArea()
   Local oFusion := PCLSFUSION():New()
-  Local lUpSC9  := .F.
   Local aRet    := {}
   Local aRetEnv := {}
   Local nX      := 0
   Local nPrxSeq := 0
   Local cQuery  := ""
+  Local cRetPrx := ""
 
   If ValType(mv_par30) == "C"
      mv_par30 := 9999
@@ -47,20 +48,16 @@ User Function MTA450I()
   EndIf        
 
   If SC5->C5_TPCARGA == "1" .and. mv_par30 == 0
-    // -- Parametro: 1 - Pedido Venda
-    //               2 - Testar bloqueio do Pedido
-    //               3 - Sequencial do Pedido
-    //               4 - Registro deletado
-    // --------------------------------------------
-     If SC9->C9_XSEQFUS <> SC5->C5_XSEQFUS
-        nPrxSeq := Val(SC5->C5_XSEQFUS) + 1
-        lUpSC9  := .T.
-      else
-        nPrxSeq := Val(SC5->C5_XSEQFUS)
-        lUpSC9  := .F.  
-     EndIf
-        
-     aRet := oFusion:LerPedidoVenda(SC5->C5_NUM,nPrxSeq,.F.,.F.)
+     cRetPrx := oFusion:pegarPrxSeq(SC5->C5_NUM, SC9->(Recno()))
+     nPrxSeq := IIf(Empty(cRetPrx),0,Val(cRetPrx) + 1)
+    
+    // --- Parametro: 1 - Pedido Venda
+    //                2 - Sequencial do Pedido
+    //                3 - Testar bloqueio do Pedido
+    //                4 - Nota Fiscal de saída
+    //                5 - Serie da NF de saída
+    // --------------------------------------------- 
+     aRet := oFusion:lerPedidoVenda(SC5->C5_NUM,nPrxSeq,.F.,"","")
 
      If aRet[01]
         If Len(aRet[04]) > 0                                // Itens do Pedido de Venda Liberada                      
@@ -73,26 +70,22 @@ User Function MTA450I()
            If ! aRetEnv[01]
               ApMsgAlert(aRetEnv[02],"ATENÇÃO")
             else
-              If lUpSC9 
-                 Reclock("SC5",.F.)
-                   Replace SC5->C5_XSEQFUS with PadL(AllTrim(Str(nPrxSeq)),TamSX3("C5_XSEQFUS")[1],"0")
-                 SC5->(MsUnlock())
+              dbSelectArea("SC9")
+              SC9->(dbSetOrder(1))
 
-                 dbSelectArea("SC9")
-                 SC9->(dbSetOrder(1))
+              For nX := 1 To Len(oFusion:aRegistro)
+                  SC9->(dbGoto(oFusion:aRegistro[nX][24]))
 
-                 For nX := 1 To Len(oFusion:aRegistro)
-                     SC9->(dbGoto(oFusion:aRegistro[nX][24]))
+                  RecLock("SC9",.F.)
+                     Replace SC9->C9_XSEQFUS with PadL(AllTrim(Str(nPrxSeq)),TamSX3("C9_XSEQFUS")[1],"0")
+                  SC9->(MsUnlock())
+              Next
 
-                     RecLock("SC9",.F.)
-                       Replace SC9->C9_XSEQFUS with PadL(AllTrim(Str(nPrxSeq)),TamSX3("C9_XSEQFUS")[1],"0")
-                     SC9->(MsUnlock())
-                 Next
-              EndIf   
+              ApMsgInfo("Pedido enviado para FUSION com sucesso.")
            EndIf
         EndIf
       else
-        ApMsgAlert(aRet[02],"ATENÇÃO")  
+        ApMsgAlert(aRet[02],"ATENÇÃO")
      EndIf
 
      mv_par30 := 9999

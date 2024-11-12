@@ -9,7 +9,7 @@
    integração do FUSION x PROTHEUS.
 
   @author Anderson Almeida - TOTVS
-  @since   28/08/2024 
+  @since   17/10/2024 
 /*/
 //--------------------------------------------------------
 User Function FFOMSC01()
@@ -61,7 +61,7 @@ Static Function ModelDef()
   Local oModel
   Local oStruTB1 := fnM01TB1()
   Local oStruTB2 := fnM01TB2()
-  Local oStruSZN := FWFormStruct(1,"SZN")
+  Local oStruZ01 := FWFormStruct(1,"Z01")
   
   oModel := MPFormModel():New("FUSION - Geração Carga")  
 
@@ -69,27 +69,27 @@ Static Function ModelDef()
   oModel:AddFields("MSTTB1",,oStruTB1)
   
   oModel:AddGrid("DETTB2","MSTTB1",oStruTB2)
-  oModel:AddFields("MSTSZN","MSTTB1",oStruSZN)
+  oModel:AddFields("MSTZ01","MSTTB1",oStruZ01)
 
   oModel:GetModel("MSTTB1"):SetDescription("Log FUSION")  
   oModel:GetModel("DETTB2"):SetDescription("Detalhamento")  
-  oModel:GetModel("MSTSZN"):SetDescription("Registro")  
+  oModel:GetModel("MSTZ01"):SetDescription("Registro")  
 
   oModel:SetPrimaryKey({""})
 
-  oModel:GetModel("DETTB2"):SetUniqueLine({"ZN_DATA","ZN_HORA","ZN_CARGA"}) 
+  oModel:GetModel("DETTB2"):SetUniqueLine({"Z01_DATA","Z01_HORA","Z01_CARGA"}) 
 Return oModel 
 
-//-----------------------------------------
+//----------------------------------------------
 /*/ fnM01TB1
-  Estrutura da pesquisa dos Logs.								  
+
+   Estrutura da pesquisa dos Logs.								  
 
   @author Anderson Almeida (TOTVS NE)
   Return
-  @história
-  25/05/2021 - Desenvolvimento da Rotina.
+  @since 17/10/2024 - Desenvolvimento da Rotina.
 /*/
-//-----------------------------------------
+//----------------------------------------------
 Static Function fnM01TB1()
   Local oStruct := FWFormModelStruct():New()
   
@@ -135,10 +135,10 @@ Static Function ViewDef()
   Local oModel  := ModelDef() 
   Local oStrTB1 := fnV01TB1() 
   Local oStrTB2 := fnV01TB2()
-  Local oStrSZN := FWFormStruct(2,"SZN")
+  Local oStrZ01 := FWFormStruct(2,"Z01")
   Local oView
 
-  oStrSZN:RemoveField("ZN_STATUS")
+  oStrZ01:RemoveField("Z01_STATUS")
   
   oView := FWFormView():New() 
    
@@ -153,7 +153,7 @@ Static Function ViewDef()
   oView:AddField("FCAB",oStrTB1,"MSTTB1") 
  
   oView:AddGrid("FDET",oStrTB2,"DETTB2") 
-  oView:AddField("FREG",oStrSZN,"MSTSZN") 
+  oView:AddField("FREG",oStrSZN,"MSTZ01") 
   oView:EnableTitleView("FREG","Detalhe")
 
  // --- Definição da Tela
@@ -386,16 +386,16 @@ Static Function fnF01Det()
   Local oView   := FWViewActive()
   Local oModel  := FWModelActive()
   Local oGrdDet := oModel:GetModel("DETTB2")
-  Local oGrdReg := oModel:GetModel("MSTSZN")
+  Local oGrdReg := oModel:GetModel("MSTZ01")
 
-  dbSelectArea("SZN")
-  SZN->(dbGoto(oGrdDet:GetValue("ZN_RECNO")))
+  dbSelectArea("Z01")
+  Z01->(dbGoto(oGrdDet:GetValue("Z01_RECNO")))
 
-  oGrdReg:LoadValue("ZN_DATA"   , SZN->ZN_DATA)
-  oGrdReg:LoadValue("ZN_HORA"   , SZN->ZN_HORA)
-  oGrdReg:LoadValue("ZN_CARGA"  , SZN->ZN_CARGA)
-  oGrdReg:LoadValue("ZN_DTCARGA", SZN->ZN_DTCARGA)
-  oGrdReg:LoadValue("ZN_MENSAG" , SZN->ZN_MENSAG)
+  oGrdReg:LoadValue("ZN_DATA"   , Z01->Z01_DATA)
+  oGrdReg:LoadValue("ZN_HORA"   , Z01->Z01_HORA)
+  oGrdReg:LoadValue("ZN_CARGA"  , Z01->Z01_CARGA)
+  oGrdReg:LoadValue("ZN_DTCARGA", Z01->Z01_DTCARGA)
+  oGrdReg:LoadValue("ZN_MENSAG" , Z01->Z01_MENSAG)
 
   oView:Refresh()
 Return
@@ -442,15 +442,15 @@ Static Function fnF01REG(oView)
 
   oModel:GetModel("DETTB2"):ClearData(.T.)
 
-  cQuery := "Select SZN.ZN_STATUS, SZN.ZN_DATA, SZN.ZN_HORA, SZN.ZN_CARGA,"
-  cQuery += "       SZN.ZN_DTCARGA, SZN.R_E_C_N_O_ as RECNO"
-  cQuery += "  from " + RetSqlName("SZN") + " SZN"
-  cQuery += "   where SZN.D_E_L_E_T_ <> '*'"
-  cQuery += "     and SZN.ZN_FILIAL  = '" + FWxFilial("SZN") + "'"
-  cQuery += "     and SZN.ZN_DATA between '" + DToS(dInicio) + "' and '" + DToS(dFim) + "'"
+  cQuery := "Select Z01.Z01_STATUS, Z01.Z01_DATA, Z01.Z01_HORA, Z01.Z01_CARGA,"
+  cQuery += "       Z01.Z01_DTCARGA, Z01.R_E_C_N_O_ as RECNO"
+  cQuery += "  from " + RetSqlName("Z01") + " Z01"
+  cQuery += "   where Z01.D_E_L_E_T_ <> '*'"
+  cQuery += "     and Z01.Z01_FILIAL  = '" + FWxFilial("Z01") + "'"
+  cQuery += "     and Z01.Z01_DATA between '" + DToS(dInicio) + "' and '" + DToS(dFim) + "'"
 
   If ! Empty(cCarga)
-     cQuery += " and SZN.ZN_CARGA = '" + cCarga + "'"
+     cQuery += " and Z01.Z01_CARGA = '" + cCarga + "'"
   EndIf
   
   cQuery := ChangeQuery(cQuery)
@@ -473,11 +473,11 @@ Static Function fnF01REG(oView)
 
     oGrdDet:AddLine()
         
-    oGrdDet:LoadValue("ZN_STATUS" , IIf(QREG->ZN_STATUS == "S","BR_VERDE","BR_VERMELHO"))
-    oGrdDet:LoadValue("ZN_DATA"   , SToD(QREG->ZN_DATA))
-    oGrdDet:LoadValue("ZN_HORA"   , QREG->ZN_HORA)
-    oGrdDet:LoadValue("ZN_CARGA"  , QREG->ZN_CARGA)
-    oGrdDet:LoadValue("ZN_DTCARGA", SToD(QREG->ZN_DTCARGA))
+    oGrdDet:LoadValue("ZN_STATUS" , IIf(QREG->Z01_STATUS == "S","BR_VERDE","BR_VERMELHO"))
+    oGrdDet:LoadValue("ZN_DATA"   , SToD(QREG->Z01_DATA))
+    oGrdDet:LoadValue("ZN_HORA"   , QREG->Z01_HORA)
+    oGrdDet:LoadValue("ZN_CARGA"  , QREG->Z01_CARGA)
+    oGrdDet:LoadValue("ZN_DTCARGA", SToD(QREG->Z01_DTCARGA))
     oGrdDet:LoadValue("ZN_RECNO"  , QREG->RECNO)
 
     QREG->(dbSkip())

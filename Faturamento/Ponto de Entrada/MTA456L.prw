@@ -26,16 +26,16 @@ User Function MTA456L()
 
   If nOpc == 1 .or. nOpc == 4
      If SC5->C5_TPCARGA == "1"
-        If ! Empty(SC5->C5_XSEQFUS)
-           nPrxSeq := Val(SC5->C5_XSEQFUS) + 1
-        EndIf
+        cRetPrx := oFusion:pegarPrxSeq(SC5->C5_NUM, SC9->(Recno()))
+        nPrxSeq := IIf(Empty(cRetPrx),0,Val(cRetPrx) + 1)
 
-       // -- Parametro: 1 - Pedido Venda
-       //                2 - Testar bloqueio do Pedido
-       //                3 - Sequencial do Pedido
-       //                4 - Registro deletado
-       // --------------------------------------------
-        aRet := oFusion:LerPedidoVenda(SC5->C5_NUM,nPrxSeq,.F.,.F.)
+       // --- Parametro: 1 - Pedido Venda
+       //                2 - Sequencial do Pedido
+       //                3 - Testar bloqueio do Pedido
+       //                4 - Nota Fiscal de saída
+       //                5 - Serie da NF de saída
+       // ---------------------------------------------
+        aRet := oFusion:lerPedidoVenda(SC5->C5_NUM,nPrxSeq,.F.,"","")
 
         If aRet[01]
            If Len(aRet[04]) > 0                             // Itens do Pedido de Venda Liberada                          
@@ -46,10 +46,6 @@ User Function MTA456L()
               aRetEnv := oFusion:Enviar("saveEntregaServico")
 
               If aRetEnv[01]
-                 Reclock("SC5",.F.)
-                   Replace SC5->C5_XSEQFUS with PadL(AllTrim(Str(nPrxSeq)),TamSX3("C5_XSEQFUS")[1],"0")
-                 SC5->(MsUnlock())
-
                  dbSelectArea("SC9")
                  SC9->(dbSetOrder(1))
 
@@ -60,12 +56,14 @@ User Function MTA456L()
                        Replace SC9->C9_XSEQFUS with PadL(AllTrim(Str(nPrxSeq)),TamSX3("C9_XSEQFUS")[1],"0")
                      SC9->(MsUnlock())
                  Next
+
+                 ApMsgInfo("Pedido enviado para FUSION com sucesso.")
                else
-                 ApMsgAlert(aRet[02],"ATENÇÃO")  
+                 ApMsgAlert(aRetEnv[02],"ATENÇÃO")  
               EndIf
-            else
-              ApMsgAlert(aRet[02],"ATENÇÃO")  
            EndIf
+          else
+           ApMsgAlert(aRet[02],"ATENÇÃO")
         EndIf   
      EndIf   
   EndIf

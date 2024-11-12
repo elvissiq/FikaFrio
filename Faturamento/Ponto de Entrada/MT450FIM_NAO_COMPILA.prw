@@ -24,6 +24,7 @@ User Function MT450FIM()
   Local lRet    := .T.
   Local nPrxSeq := 0
   Local nX      := 0
+  Local cRetPrx := ""
 
   dbSelectArea("SC5")
   SC5->(dbSetOrder(1))
@@ -35,15 +36,11 @@ User Function MT450FIM()
     //                3 - Sequencial do Pedido
     //                4 - Registro deletado
     // --------------------------------------------
-     If ! Empty(SC5->C5_XSEQFUS)
-        nPrxSeq := Val(SC5->C5_XSEQFUS) + 1
-     EndIf
-
-     aRet := oFusion:LerPedidoVenda(SC5->C5_NUM,nPrxSeq,.F.,.F.)
+     cRetPrx := oFusion:pegarPrxSeq(SC5->C5_NUM, SC9->(Recno()))
+     nPrxSeq := IIf(Empty(cRetPrx),0,Val(cRetPrx) + 1)
+     aRet    := oFusion:LerPedidoVenda(SC5->C5_NUM,nPrxSeq,.F.,.F.)
 
      If aRet[01]
-       // -- Itens do Pedido de Venda Liberada
-       // ------------------------------------
         If Len(aRet[04]) > 0                                
            oFusion:aRegistro := aRet[04]                       // Registro do Pedido de Venda
 
@@ -52,10 +49,6 @@ User Function MT450FIM()
            aRetEnv := oFusion:Enviar("saveEntregaServico")
            
            If aRetEnv[01]
-              Reclock("SC5",.F.)
-                 Replace SC5->C5_XSEQFUS with PadL(AllTrim(Str(nPrxSeq)),TamSX3("C5_XSEQFUS")[1],"0")
-              SC5->(MsUnlock())
-
               dbSelectArea("SC9")
               SC9->(dbSetOrder(1))
 
@@ -66,13 +59,14 @@ User Function MT450FIM()
                     Replace SC9->C9_XSEQFUS with PadL(AllTrim(Str(nPrxSeq)),TamSX3("C9_XSEQFUS")[1],"0")
                   SC9->(MsUnlock())
               Next
+
+              ApMsgInfo("Pedido enviado para FUSION com sucesso.")
             else
-              ApMsgAlert(aRet[02],"ATEN플O")  
+              ApMsgAlert(aRetEnv[02],"ATEN플O")  
            EndIf
         EndIf
-       // -----------------------------------
       else
-        ApMsgAlert(aRet[02],"ATEN플O")  
+        ApMsgAlert(aRet[02],"ATEN플O")
      EndIf   
   EndIf
 Return lRet
