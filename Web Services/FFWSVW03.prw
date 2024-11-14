@@ -197,6 +197,7 @@ Static Function fnGrvReg(oJson, cJSon, cMensag)
   Local nY       := 0
   Local nK       := 0
   Local nOpcao   := 0
+  Local cChar    := ""
   Local cAux     := ""
   Local cCNPJFil := ""
   Local cLog	   := ""
@@ -316,7 +317,7 @@ Static Function fnGrvReg(oJson, cJSon, cMensag)
                   EndIf
                EndIf
              else
-               aAdd(aRegSC5, {"C5_NUM", GetSXENum("SC5","C5_NUM"), Nil})  
+               aAdd(aRegSC5, {"C5_NUM", GetSX8Num("SC5","C5_NUM"), Nil})  
             EndIf      
            // ----------------------
 
@@ -365,9 +366,19 @@ Static Function fnGrvReg(oJson, cJSon, cMensag)
 			              For nY := 1 To Len(aAux)
 				                cAux := AllTrim(aAux[nY])
 				                cLog += cAux
-			              Next	
+			              Next
+
+                    For nY := 1 To Len(cLog)
+	                      cChar := SubStr(cLog,nY,1)
+
+                        If (Asc(cChar) < 32 .Or. Asc(cChar) > 123) .and. !cChar $ "|"
+		                       cLog := StrTran(cLog,cChar," ")
+	                      EndIf
+                    Next 
                     
                     DisarmTransaction()
+                  else
+                    ConfirmSX8()  
                  EndIf
 			         End Transaction
             EndIf  
