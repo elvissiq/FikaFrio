@@ -491,7 +491,8 @@ Method lerPedidoVenda(pPedido,pSeq,pSC5,pNF,pSerie) Class PCLSFUSION
   
   If QPSQ->(Eof())
      aRet[01] := .F.
-     aRet[02] := "Não existe registro a ser enviado ao FUSION."
+     aRet[02] := "Não existe registro a ser enviado ao FUSION. " +;
+                 "Verifique o cadastro 'Complemento de Produto'."
 
      QPSQ->(dbCloseArea())
 

@@ -346,7 +346,7 @@ Static Function fnGrvReg(oJson, cJSon, cMensag)
                                cOper := AllTrim(aItens[nY][nK][02]) 
                        EndIf    
                    Next
-           
+         
                   // -- Achar a TES
                   // --------------
                    cTES := MaTESInt(2,cOper,cCliente,cLoja,"C",cProduto,"C6_TES")

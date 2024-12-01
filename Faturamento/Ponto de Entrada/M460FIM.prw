@@ -48,9 +48,7 @@ User Function M460FIM()
            
            aRet := oFusion:Enviar("saveEntregaServico")     // Enviar para FUSION
 
-           If aRet[01]
-              ApMsgInfo("Número da NF enviado para FUSION com sucesso.")
-            else
+           If ! aRet[01]
               ApMsgAlert(aRet[02],"ATENÇÃO")  
            EndIf
         EndIf
