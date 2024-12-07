@@ -495,12 +495,12 @@ User Function fn01VPV(pPedido)
        QPED->(dbSkip())
      EndDo
 
-     QPED->(dbCloseArea())
-
      oGrdCrg:GoLine(1)
      oGrdPed:GoLine(1)
   EndIf
 
+  QPED->(dbCloseArea())
+  
   oGrdCrg:SetNoInsertLine(.T.)
   oGrdCrg:SetNoUpdateLine(.T.)
 

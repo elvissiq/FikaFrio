@@ -7,21 +7,16 @@
 
    Função para enviar Pedido de Venda ao FUSION.
 
-  @Parâmetro pItens - itens do pedido de venda
-
   @Autor Anderson Almeida - TOTVS
   @since  28/08/2024 - Desenvolvimento da Rotina.
 /*/
 //------------------------------------------------- 
-User Function FFFATM01(pItens)
+User Function FFFATM01()
   Local oFusion := PCLSFUSION():New()
   Local aRet    := {}
   Local cStatus := ""
   Local cFCarga := ""
-  Local cPedido := ""
   Local cSeqFus := ""
-
-  Default pItens := {}
 
   If SC5->C5_TPCARGA == "1"
     // --- Parametro: 1 - Pedido Venda
@@ -30,7 +25,13 @@ User Function FFFATM01(pItens)
     //                4 - Nota Fiscal de saída
     //                5 - Serie da NF de saída
     // ---------------------------------------------
-     aRet := oFusion:LerPedidoVenda(cPedido,Val(cSeqFus),.T.,"","")
+     If ! oFusion:ValidaCad(SC5->C5_NUM)            // Validar Cadastro de Produto Complementos
+        ApMsgAlert("Existe produto(s) sem cadastro complementar. " + CRLF +;
+                   "Verifique o cadastro 'Complemento de Produto'.","ATENÇÃO")
+        Return
+     EndIf 
+     
+     aRet := oFusion:LerPedidoVenda(SC5->C5_NUM,Val(cSeqFus),.F.,"","")
 
      If aRet[01]
         oFusion:aRegistro := IIf(Len(aRet[04]) > 0,aRet[04],aRet[03])                    // Registro do Pedido de Venda
@@ -56,7 +57,7 @@ User Function FFFATM01(pItens)
         aRet := oFusion:Enviar("saveEntregaServico")     // Enviar para FUSION
 
         If aRet[01]
-           ApMsgInfo(aRet[02])
+           ApMsgInfo("Pedido enviado para FUSION com sucesso.")
          else
            ApMsgAlert(aRet[02],"ATENÇÃO")  
         EndIf

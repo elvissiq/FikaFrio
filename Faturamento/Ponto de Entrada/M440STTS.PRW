@@ -32,6 +32,12 @@ User Function M440STTS()
      cRetPrx := oFusion:pegarPrxSeq(SC5->C5_NUM, SC9->(Recno()))
      nPrxSeq := IIf(Empty(cRetPrx),0,Val(cRetPrx) + 1)
 
+     If ! oFusion:ValidaCad(SC5->C5_NUM)            // Validar Cadastro de Produto Complementos
+        ApMsgAlert("Existe produto(s) sem cadastro complementar. " + CRLF +;
+                   "Verifique o cadastro 'Complemento de Produto'.","ATENÇÃO")
+        Return
+     EndIf              
+
      aRet := oFusion:lerPedidoVenda(SC5->C5_NUM, nPrxSeq, .F., "", "")
 
      If aRet[01]

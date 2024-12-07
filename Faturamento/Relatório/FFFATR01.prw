@@ -92,13 +92,13 @@ Local cTagCondFim	:= IIf(lCondensa, TAG_CONDEN_FIM , "")
 	Local		cPorta := "AUTO"
   	Private nMaxChar 		:= 47 // MÁXIMO DE CARACTERES POR LINHA
 
-  //Local nHdlECF
-
   dbSelectArea("SA1")
   SA1->(dbSetOrder(1))
   SA1->(dbSeek(FWxFilial("SA1") + SC5->C5_CLIENTE + SC5->C5_LOJACLI))
 
-  
+  //nHandle := IFAbrir( cImpressora, c$orta )
+// Inicia a comunicação com a impressora %iscal.
+// Parâmetros:cImpressora – nome da impressora retornada pela função I%(I)!ARcPorta – *ual a porta ser+ utili"ada para comunicação. Pe'.: C,-?/ C,-0. Retorno:nHandle – Handle da Impressora 1ue dever+ ser informado em todas as outras funç2espara comunicação com a mesma
 
 Alert("Impressora: " + cImpressora)
 				STImPFNfce( @{"C",cImpressora,nHdlECF})

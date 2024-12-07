@@ -47,6 +47,12 @@ User Function M450CMAN()
             //                4 - Nota Fiscal de saída
             //                5 - Serie da NF de saída
             // ---------------------------------------------
+             If ! oFusion:ValidaCad(SC5->C5_NUM)            // Validar Cadastro de Produto Complementos
+                ApMsgAlert("Existe produto(s) sem cadastro complementar. " + CRLF +;
+                           "Verifique o cadastro 'Complemento de Produto'.","ATENÇÃO")
+                Return .F.
+             EndIf 
+             
              aRet := oFusion:LerPedidoVenda(SC5->C5_NUM,nPrxSeq,.F.,"","")
 
              If aRet[01]

@@ -35,36 +35,41 @@ User Function MTA456L()
        //                4 - Nota Fiscal de saída
        //                5 - Serie da NF de saída
        // ---------------------------------------------
-        aRet := oFusion:lerPedidoVenda(SC5->C5_NUM,nPrxSeq,.F.,"","")
+        If ! oFusion:ValidaCad(SC5->C5_NUM)            // Validar Cadastro de Produto Complementos
+           ApMsgAlert("Existe produto(s) sem cadastro complementar. " + CRLF +;
+                      "Verifique o cadastro 'Complemento de Produto'.","ATENÇÃO")
+         else
+           aRet := oFusion:lerPedidoVenda(SC5->C5_NUM,nPrxSeq,.F.,"","")
 
-        If aRet[01]
-           If Len(aRet[04]) > 0                             // Itens do Pedido de Venda Liberada                          
-              oFusion:aRegistro := aRet[04]                 // Registro do Pedido de Venda
+           If aRet[01]
+              If Len(aRet[04]) > 0                             // Itens do Pedido de Venda Liberada                          
+                 oFusion:aRegistro := aRet[04]                 // Registro do Pedido de Venda
 
-              oFusion:saveEntregaServico("1","S",.F.)       // 1 - Normal, B - Bloqueado ou C - Cancelado e Forma Carga
+                 oFusion:saveEntregaServico("1","S",.F.)       // 1 - Normal, B - Bloqueado ou C - Cancelado e Forma Carga
            
-              aRetEnv := oFusion:Enviar("saveEntregaServico")
+                 aRetEnv := oFusion:Enviar("saveEntregaServico")
 
-              If aRetEnv[01]
-                 dbSelectArea("SC9")
-                 SC9->(dbSetOrder(1))
+                 If aRetEnv[01]
+                    dbSelectArea("SC9")
+                    SC9->(dbSetOrder(1))
 
-                 For nX := 1 To Len(oFusion:aRegistro)
-                     SC9->(dbGoto(oFusion:aRegistro[nX][24]))
+                    For nX := 1 To Len(oFusion:aRegistro)
+                        SC9->(dbGoto(oFusion:aRegistro[nX][24]))
 
-                     RecLock("SC9",.F.)
-                       Replace SC9->C9_XSEQFUS with PadL(AllTrim(Str(nPrxSeq)),TamSX3("C9_XSEQFUS")[1],"0")
-                     SC9->(MsUnlock())
-                 Next
+                        RecLock("SC9",.F.)
+                          Replace SC9->C9_XSEQFUS with PadL(AllTrim(Str(nPrxSeq)),TamSX3("C9_XSEQFUS")[1],"0")
+                        SC9->(MsUnlock())
+                    Next
 
-                 ApMsgInfo("Pedido enviado para FUSION com sucesso.")
-               else
-                 ApMsgAlert(aRetEnv[02],"ATENÇÃO")  
+                    ApMsgInfo("Pedido enviado para FUSION com sucesso.")
+                  else
+                    ApMsgAlert(aRetEnv[02],"ATENÇÃO")  
+                 EndIf
               EndIf
+            else
+              ApMsgAlert(aRet[02],"ATENÇÃO")
            EndIf
-          else
-           ApMsgAlert(aRet[02],"ATENÇÃO")
-        EndIf   
+        EndIf
      EndIf   
   EndIf
 Return

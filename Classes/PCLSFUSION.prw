@@ -17,7 +17,6 @@ Class PCLSFUSION
   Data aRegistro  as Array
   Data cLogin     as string
   Data cPassword  as String
-  Data cFilFus    as String
   Data cBody      as String
   Data oParseJSON
 
@@ -29,6 +28,7 @@ Class PCLSFUSION
   Method sendMotoristas(pCodigo)                           // Montar requisição Cadastro de Motorista.
   Method sendAjudantes(pCodigo)                            // Montar requisição Cadastro de Ajudante.
   Method pegarPrxSeq(pPedido)                              // Pegar o próximo sequencial do pedido no FUSION. 
+  Method ValidaCad(pPedido)                                // Validar se os cadastros então corretos.
   Method lerPedidoVenda(pPedido,pSeq,pSC5,pNf,pSerie)      // Verificar se o pedido de venda está valido para envio e montar.
   Method saveEntregaServico(pStatus,pForma,lCarga)         // Montar de Pedido de Venda para envio.
   Method detalheCarga(pCarga,pDtInicio,pDtFim)             // Montar requisição do Detalhe da Carga.
@@ -121,7 +121,7 @@ Method sendClientes(pCliente,pLoja) Class PCLSFUSION
   self:cBody += '          "razao_cliente":"' + FwNoAccent(AllTrim(SA1->A1_NOME)) + '",'
   self:cBody += '          "cnpj_cpf_cliente":"' + SA1->A1_CGC + '",'
   self:cBody += '          "cliente_cod_rota_erp": "' + SA1->A1_XROTA + '",'
-  self:cBody += '          "cliente_descricao_rota ": "' + Posicione("Z02",1,FWxFilial("Z02") + SA1->A1_XROTA,"Z02_DESCRI") + '",'
+  self:cBody += '          "cliente_descricao_rota ": "' + FwNoAccent(Posicione("Z02",1,FWxFilial("Z02") + SA1->A1_XROTA,"Z02_DESCRI")) + '",'
   self:cBody += '          "cod_segmento":"2",'
   self:cBody += '          "descr_segmento":"' + AllTrim(Posicione("SX5",1,FWxFilial("SX5") + "T3" + SA1->A1_SATIV1,"X5_DESCRI")) + '",'
   self:cBody += '          "cep_cliente":"' + IIF(!Empty(SA1->A1_CEPE),SA1->A1_CEPE,SA1->A1_CEP) + '",'
@@ -286,7 +286,7 @@ Method sendMotoristas(pCodigo) Class PCLSFUSION
   self:cBody += '        ['  
   self:cBody += '         {'
   self:cBody += '          "campo_alt":"NEW_825",'
-  self:cBody += '          "seq_id": ' + DA4->DA4_COD + ','
+  self:cBody += '          "seq_id": ' + Alltrim(Str(Val(DA4->DA4_COD))) + ','
   self:cBody += '          "codigo_erp":"' + DA4->DA4_COD + '",'
   self:cBody += '          "nome":"' + FwNoAccent(AllTrim(DA4->DA4_NOME)) + '",'
   self:cBody += '          "cpf":"' + DA4->DA4_CGC + '",'
@@ -405,6 +405,42 @@ Method pegarPrxSeq(pPedido, pRecSC9) Class PCLSFUSION
 
   QSC9->(dbCloseArea())
 Return cRet
+
+//------------------------------------------------
+/*/ Classe PCLSFUSION
+
+  Método ValidaCad
+  
+   Validar se os produtos estão adptos a ser
+   enviados para o FUSION. 
+
+  @author Anderson Almeida (TOTVS NE)
+  @since 01/10/2024	
+/*/
+//------------------------------------------------
+Method ValidaCad(pPedido) Class PCLSFUSION
+  Local lRet := .T.
+  Local cQry := ""
+
+  cQry := "Select SB5.B5_COD from " + RetSqlName("SC5") + " SC5, "
+  cQry += RetSqlName("SC6") + " SC6, " + RetSqlName("SB5") + " SB5" 
+  cQry += "  where SC5.D_E_L_E_T_ <> '*'"
+  cQry += "    and SC5.C5_FILIAL  = '" + FWxFilial("SC5") + "'"
+  cQry += "    and SC5.C5_NUM     = '" + pPedido + "'"
+  cQry += "    and SC6.D_E_L_E_T_ <> '*'"
+  cQry += "    and SC6.C6_FILIAL  = '" + FWxFilial("SC6") + "'"
+  cQry += "    and SC6.C6_NUM     = SC5.C5_NUM"
+  cQry += "    and SB5.D_E_L_E_T_ <> '*'"
+  cQry += "    and SB5.B5_FILIAL  = '" + xFilial("SB5") + "'"
+  cQry += "    and SB5.B5_COD     = SC6.C6_PRODUTO"
+  cQry := ChangeQuery(cQry)
+
+  dbUseArea(.T.,"TopConn",TCGenQry(,,cQry),"QSB5",.F.,.T.)     
+  
+  lRet := ! QSB5->(Eof())
+
+  QSB5->(dbCloseArea())
+Return lRet
 
 //----------------------------------------------------------------------
 /*/ Classe PCLSFUSION
@@ -637,7 +673,6 @@ Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCL
   Local cPedido    := ""
   Local cCondPag   := Alltrim(Posicione("SE4",1,FWxFilial("SE4")+SC5->C5_CONDPAG,"E4_DESCRI"))
   Local lEnvBlq    := SuperGetMV("MV_XENVBLQ",.F.,.F.)
-  Local cFilFus    := ""
   Local cQry       := ""
 
   Default cNFiscal := IIF(ValType(pNFiscal) != "U", pNFiscal, Alltrim(SC5->C5_NOTA))
@@ -694,7 +729,7 @@ Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCL
   self:cBody += '          "status": "' + cStatusFUS + '",'
   self:cBody += '          "obs": "",'
   self:cBody += '          "num_ped_conf": "' + cPedido + '",'
-  self:cBody += '          "carga": "' + IIf(lCarga, IIf(!Empty(self:aRegistro[01][21]), cFilFus+"_"+self:aRegistro[01][21],""), "") + '",'
+  self:cBody += '          "carga": "' + self:aRegistro[01][21] + '",'
   
   If self:aRegistro[01][13] > 0 
      self:cBody += '        "cubagem": "' + AllTrim(Str(self:aRegistro[01][13])) + '",'
