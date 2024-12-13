@@ -44,7 +44,7 @@ User Function M460FIM()
         If Len(aRet[04]) > 0                                   // Itens do Pedido de Venda Liberada
            oFusion:aRegistro := aRet[04] 
 
-           oFusion:saveEntregaServico("1","S",.F.)             // 1 - Normal, B - Bloqueado ou C - Cancelado e Forma Carga
+           oFusion:saveEntregaServico("1","S",.T.)             // 1 - Normal, B - Bloqueado ou C - Cancelado e Forma Carga
            
            aRet := oFusion:Enviar("saveEntregaServico")     // Enviar para FUSION
 

@@ -35,7 +35,7 @@ Class PCLSFUSION
   Method getIntErp()                                       // Montar requisição para importação de Carga. 
   Method setIntErp(pIntId,pCarga)                          // Informar ao FUSION a gravação da carga.
   Method altCarga(pForma,pPedido,pRecno)                   // Montar requisição e enviar para FUSION. 
-  Method atualizaCarga(pJsonData)                          // Monta requisição para atualizar dados da carga.
+  Method atualizaCarga()                                   // Monta requisição para atualizar dados da carga.
   Method Enviar(pMetodo,pSchedule)                         // Enviar para o FUSION.
 EndClass
 
@@ -375,7 +375,7 @@ Method sendAjudantes(pCodigo) Class PCLSFUSION
   self:cBody += ' </soapenv:Body>'
   self:cBody += '</soapenv:Envelope>'
 Return .T.
-
+ 
 //------------------------------------------------
 /*/ Classe PCLSFUSION
 
@@ -467,17 +467,13 @@ Method lerPedidoVenda(pPedido,pSeq,pSC5,pNF,pSerie) Class PCLSFUSION
   Local lLerSC5   := pSC5
   Local cNumNF    := pNF
   Local cSerieNF  := pSerie
-  Local aRet      := {.T.,"",{},{}}
+  Local aRet      := {.T.,"",{},{}} // Posição 03 para pedido bloqueado não vai ser usado na FIKA FRIO
   Local aRegLib   := {}
-  Local aRegBloq  := {}
   Local cQuery    := ""
   Local cDsRegiao := ""
   Local nLPeso    := 0
   Local nLCubagem := 0
   Local nLTtVend  := 0
-  Local nBPeso    := 0
-  Local nBCubagem := 0
-  Local nBTtVend  := 0
 
   dbSelectArea("SC5")
   SC5->(dbSetOrder(1))
@@ -523,7 +519,6 @@ Method lerPedidoVenda(pPedido,pSeq,pSC5,pNF,pSerie) Class PCLSFUSION
   cQuery += "     and SB5.B5_COD     = SB1.B1_COD"
   cQuery := ChangeQuery(cQuery)
   dbUseArea(.T.,"TOPCONN",TCGenQry(,,cQuery),"QPSQ",.F.,.T.)     
-  MemoWrite("c:\Temp\QPSQ.txt",cQuery)
   
   If QPSQ->(Eof())
      aRet[01] := .F.
@@ -584,44 +579,7 @@ Method lerPedidoVenda(pPedido,pSeq,pSC5,pNF,pSerie) Class PCLSFUSION
        If Type("cStatusFUS") == "C"
           cStatusFUS := "1" //Status Liberado
        EndIf 
-
-     else
-       aAdd(aRegBloq,{QPSQ->PRODUTO,;                         // 01 - Produto
-                      QPSQ->B1_DESC,;                         // 02 - Descrição
-                      QPSQ->B1_UM,;                           // 03 - Unidade do Produto 
-                      QPSQ->QTDE,;                            // 04 - Quantidade liberada
-                      (QPSQ->QTDE * QPSQ->B1_PESO),;          // 05 - Peso
-                      QPSQ->PRCVEN,;                          // 06 - Valor unitário
-                      (QPSQ->QTDE * QPSQ->PRCVEN),;           // 07 - Total
-                      0,;                                     // 08 - Valor ICMS ST
-                      QPSQ->B1_POSIPI,;                       // 09 - NCM
-                      0,;                                     // 10 - CST
-                      FwNoAccent(Alltrim(SC5->C5_MENNOTA)),;  // 11 - Observação
-                      0,;                                     // 12 - Peso total
-                      0,;                                     // 13 - Cubagem total
-                      0,;                                     // 14 - Total da Venda
-                      SC5->C5_NUM,;                           // 15 - Número do Pedido
-                      SC5->C5_CLIENTE,;                       // 16 - Código do Cliente
-                      SC5->C5_LOJACLI,;                       // 17 - Loja do Cliente
-                      SC5->C5_VEND1,;                         // 18 - Código do Vendedor
-                      SC5->C5_EMISSAO,;                       // 19 - Data da emissão do pedido
-                      nSeq,;                                  // 20 - Sequencial da FUSION
-                      QPSQ->CARGA,;                           // 21 - Número da Carga
-                      SC5->C5_XREGIAO,;                       // 22 - Código da Região
-                      cDsRegiao,;                             // 23 - Descrição da Região
-                      0,;                                     // 24 - Número do registro
-                      'B'})                                   // 25 - Status do item (L-Liberado/B-Bloqueado)
-       
-       nBPeso    += (QPSQ->QTDE * QPSQ->B1_PESO)
-       nBCubagem += QPSQ->QTDE * (QPSQ->B5_COMPRLC * QPSQ->B5_ALTURLC * QPSQ->B5_LARGLC)
-       nBTtVend  += (QPSQ->PRCVEN * QPSQ->QTDE)
-
-       If Type("cStatusFUS") == "C"
-          If Empty(cStatusFUS) .Or. cStatusFUS == "0"
-             cStatusFUS := "B" //Status Bloqueado
-          EndIf 
-       EndIf
-    EndIf  
+   EndIf  
 
     QPSQ->(dbSkip())
   EndDo
@@ -636,15 +594,6 @@ Method lerPedidoVenda(pPedido,pSeq,pSC5,pNF,pSerie) Class PCLSFUSION
      aRegLib[01][14] := nLTtVend
   EndIf
 
- // -- Itens Bloqueados
- // ------------------- 
-  If Len(aRegBloq) > 0
-     aRegBloq[01][12] := nBPeso
-     aRegBloq[01][13] := nBCubagem
-     aRegBloq[01][14] := nBTtVend
-  EndIf
-
-  aRet[03] := aRegBloq
   aRet[04] := aRegLib
 Return aRet
 
@@ -937,7 +886,8 @@ Method setIntErp(pIntId, pCarga) Class PCLSFUSION
 Return
 
 //-----------------------------------------------
-/*/{protheusDoc.marcadores_ocultos} PCLSFUSION
+/*/ Classe PCLSFUSION
+
   Montar a requisição e Enviar para o FUSION as
   alterações de Veiculo e Motorista da carga.
 
@@ -945,7 +895,57 @@ Return
   @since 18/04/2024
 /*/
 //-----------------------------------------------
-Method atualizaCarga(pJsonData) Class PCLSFUSION 
+Method atualizaCarga() Class PCLSFUSION 
+  Local cJson := ""
+
+  cJson := '{'
+  cJson += ' "carga":'
+  cJson += '  {'
+  cJson += '   "codigo_erp": "' + DAK->DAK_COD + '",'
+  cJson += '   "dt_saida": "' + SubStr(DToC(DAK->DAK_DATA),7,4) + '-' + SubStr(DToC(DAK->DAK_DATA),4,2) +;
+           '-' + SubStr(DToC(DAK->DAK_DATA),1,2) + ' ' + DAK->DAK_HORA + '",'
+  cJson += '   "status": "ATIVO",'
+  cJson += '   "codmotorista": "' + DAK->DAK_MOTORI + '",'
+  cJson += '   "codveiculo": "' + DAK->DAK_CAMINH + '",'
+  cJson += '   "codfilialsaida": "1044",'
+  cJson += '   "codajudante1": "' + AllTrim(DAK->DAK_AJUDA1) + '",'
+  cJson += '   "codajudante2": "' + AllTrim(DAK->DAK_AJUDA2) + '",'
+  cJson += '   "codajudante3": "' + AllTrim(DAK->DAK_AJUDA3) + '",'
+  cJson += '   "codajudante4": ""'
+  cJson += '  },
+  cJson += ' "motorista":'
+  cJson += '  {'
+  cJson += '   "nome": "' + AllTrim(DA4->DA4_NOME) + '",'
+  cJson += '   "cpf": "' + AllTrim(DA4->DA4_CGC) + '",'
+  cJson += '   "telefone": "(' + AllTrim(DA4->DA4_DDD) + ')' + AllTrim(DA4->DA4_TEL) + '",'
+  cJson += '   "endereco": "' + AllTrim(DA4->DA4_END) + '",'
+  cJson += '   "uf": "' + AllTrim(DA4->DA4_EST) + '",'
+  cJson += '   "cidade": "' + AllTrim(DA4->DA4_MUN) + '",'
+  cJson += '   "cep": "' + AllTrim(DA4->DA4_CEP) + '",'
+  cJson += '   "nome_empresa_contrato": " ",'
+  cJson += '   "cnpj_empresa_contrato": " ",'
+  cJson += '   "tipo": "Motorista",'
+  cJson += '   "codigo_erp": "' + AllTrim(DA4->DA4_COD) + '"'
+  cJson += '  },'
+  cJson += ' "veiculo":'
+  cJson += '  {'
+  cJson += '   "descricao": "' + AllTrim(DA3->DA3_DESC) + '",'
+  cJson += '   "placa": "' + AllTrim(DA3->DA3_PLACA) + '",'
+  cJson += '   "kmAtual": "",'
+  cJson += '   "modelo": "' + AllTrim(Posicione("SX5",1,FWxFilial("SX5") + "M6" + DA3->DA3_MARVEI,"X5_DESCRI")) + '",'
+  cJson += '   "anoModelo": "' + DA3->DA3_ANOMOD + '",'
+  cJson += '   "anoFabricacao": "' + DA3->DA3_ANOFAB + '",'
+  cJson += '   "qtdMaxEntregas": "' + AllTrim(Str(DA3->DA3_CAPACN)) + '",'
+  cJson += '   "velocidade_maxima": "80",'
+  cJson += '   "tipo_combustivel": "GASOLINA",'
+  cJson += '   "codigo_erp": "' + DA3->DA3_COD + '",'
+  cJson += '   "status": "Ativo",'
+  cJson += '   "peso_max_entregas": 20.000,'
+  cJson += '   "volume_max_entregas": ' + AllTrim(Str(DA3->DA3_VOLMAX)) + ','
+  cJson += '   "qtd_pallets_veiculo": "99"'
+  cJson += '  }'
+  cJson += '}'
+
   self:cBody := '<soapenv:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
   self:cBody += '   xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"'
   self:cBody += '   xmlns:urn="urn:myInputNamespace">'
@@ -954,7 +954,7 @@ Method atualizaCarga(pJsonData) Class PCLSFUSION
   self:cBody += '    <urn:atualizaCarga soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
   self:cBody += '      <login xsi:type="xsd:string">' + self:cLogin + '</login>'
   self:cBody += '      <password xsi:type="xsd:string">' + self:cPassword + '</password>'
-  self:cBody += '      <jsonData xsi:type="xsd:string">' + pJsonData + '</jsonData>'
+  self:cBody += '      <jsonData xsi:type="xsd:string">' + cJson + '</jsonData>'
   self:cBody += '    </urn:atualizaCarga>'
   self:cBody += ' </soapenv:Body>'
   self:cBody += '</soapenv:Envelope>'
@@ -1080,7 +1080,7 @@ Method Enviar(pMetodo) Class PCLSFUSION
   If aRet[01]
      cResult := oWsdl:GetSoapResponse()
 
-     If ! oXML:Parse( cResult )
+     If ! oXML:Parse(cResult)
         aRet[01] := .F.
         aRet[02] := oXML:Error()
       else
@@ -1102,6 +1102,13 @@ Method Enviar(pMetodo) Class PCLSFUSION
                     If Len(oJson["erro_detalhes"]) > 0
                        aRet[01] := .F.
                        aRet[02] := oJson["erro_detalhes"][1]["descricao"]
+                    EndIf
+                 EndIf
+
+                 If ValType(oJson["errors"]) == "A"
+                    If Len(oJson["errors"]) > 0
+                       aRet[01] := .F.
+                       aRet[02] := oJson["errors"][1]
                     EndIf
                  EndIf
 

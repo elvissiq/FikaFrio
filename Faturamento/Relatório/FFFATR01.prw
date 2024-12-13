@@ -3,6 +3,7 @@
 #Include "TOPCONN.ch"
 #INCLUDE "FWPRINTSETUP.CH"
 #INCLUDE "RPTDEF.CH"
+#INCLUDE "FWADAPTEREAI.CH"
 
 #DEFINE TAG_CENTER_INI	"<ce>"	//centralizado
 #DEFINE TAG_CONDEN_INI	"<c>"	//condensado
@@ -79,6 +80,7 @@ Static Function ImprPV()
   Local nTtPedido := 0
   Local aMessage  := {}           // Mensagem longa
   Local aGrupo    := {}
+  Local aRet := {}
   Local cStart    := GetSrvProfString("Startpath","")
   Local cLogo     := cStart + "Logo.bmp"
   Local cQry      := ""
@@ -89,9 +91,95 @@ Static Function ImprPV()
 Local cTagCondIni	:= Iif(lCondensa, TAG_CONDEN_INI , "")
 Local cTagCondFim	:= IIf(lCondensa, TAG_CONDEN_FIM , "")
 	Local		cImpressora	:= LJGetStation("IMPFISC")
-	Local		cPorta := "AUTO"
-  	Private nMaxChar 		:= 47 // MÁXIMO DE CARACTERES POR LINHA
+  local cPorta	  	:= LJGetStation("PORTIF")
+	//Local		cPorta := "AUTO"
+ Local oPrint
+  Private oArial12   := TFont():New("Arial", , 12, , .F., , , , , .F.)		// 
 
+  	Private nMaxChar 		:= 47 // MÁXIMO DE CARACTERES POR LINHA
+	oFont4  	:= TFont():New("Arial"		,9,04,.T.,.F.,5,.T.,5,.T.,.F.)
+	oFont5  	:= TFont():New("Arial"		,9,05,.T.,.F.,5,.T.,5,.T.,.F.)
+	oFont8  	:= TFont():New("Arial"		,9,08,.T.,.F.,5,.T.,5,.T.,.F.)
+	oFont9  	:= TFont():New("Arial"		,9,08,.T.,.F.,5,.T.,5,.T.,.F.)
+	oFont11c 	:= TFont():New("Courier New",9,10,.T.,.F.,5,.T.,5,.T.,.F.)
+	oFont11 	:= TFont():New("Courier New",9,08,.T.,.F.,5,.T.,5,.T.,.F.)
+	oFont11n 	:= TFont():New("Courier New",9,10,.T.,.T.,5,.T.,5,.T.,.F.)
+	oFont10  	:= TFont():New("Arial"		,9,10,.T.,.T.,5,.T.,5,.T.,.F.)
+	oFont12  	:= TFont():New("Arial"		,9,12,.T.,.T.,5,.T.,5,.T.,.F.)
+	oFont14  	:= TFont():New("Arial"		,9,14,.T.,.T.,5,.T.,5,.T.,.F.)
+	oFont17  	:= TFont():New("Arial"		,9,17,.T.,.T.,5,.T.,5,.T.,.F.)
+	oFont20  	:= TFont():New("Arial"		,9,20,.T.,.T.,5,.T.,5,.T.,.F.)
+	oFont21  	:= TFont():New("Arial"		,9,21,.T.,.T.,5,.T.,5,.T.,.F.)
+	oFont16n 	:= TFont():New("Arial"		,9,16,.T.,.F.,5,.T.,5,.T.,.F.)
+	oFont15  	:= TFont():New("Arial"		,9,15,.T.,.T.,5,.T.,5,.T.,.F.)
+	oFont15n 	:= TFont():New("Arial"		,9,15,.T.,.F.,5,.T.,5,.T.,.F.)
+	oFont14n 	:= TFont():New("Arial"		,9,14,.T.,.F.,5,.T.,5,.T.,.F.)
+	oFont24  	:= TFont():New("Arial"		,9,24,.T.,.T.,5,.T.,5,.T.,.F.)
+/*
+	oPrint:= TMSPrinter():New("Amarelinha")
+	oPrint:Setup()
+	
+  npag := 1
+	 
+		
+		oPrint:StartPage()
+		nLin:= 05
+	//	For nVias:=1 to 2
+			//					        0         10        20        30        40
+			//                          0123456789012345678901234567890123456789012345678
+//			if nVias == 2
+	//			nLin +=90
+				oPrint:Say  (nlin,47,"-------------------------------------------------",oFont11n)
+				nLin+=10
+	//		endif
+			nLin+=10
+			oPrint:Say  (nlin,05,"-------------------------------------------------",oFont11n)
+			oPrint:Say  (nlin+=10,010,"Teste",oFont11n)
+
+
+		oPrint:EndPage()
+	
+	// Visualiza a impressão
+		oPrint:Preview()
+Return
+
+  oPrint := FWMSPrinter():New("TESTE1", IMP_PDF, .T., , .T.)//,.F.,,,,.T.,,.F.)
+  oPrint:SetResolution(72)
+  oPrint:SetMargin(5,5,5,5)
+  oPrint:SetPortrait()
+
+ // oPrint:lServer := oSetupB:GetProperty(PD_DESTINATION) == AMB_SERVER
+
+//  oPrint:SayBitMap(0040,100,cBmp,380,110)
+  oPrint:StartPage()
+  
+  oPrint:Say(01,10,"Recibo: " + Strzero(1,8), oArial12)	                                       // Número do Recibo
+
+  	
+  oPrint:EndPage() 
+
+*/
+
+OpenLoja()
+
+		  aRet :=	STFFireEvent(	ProcName(0)											,;		// Nome do processo LjMsgRun("Aguarde, Abrindo impressora Não Fiscal"
+								"STOpenPrintCommunication"									,;		// Nome do evento OpenPrintCommunication
+								{STFGetStat("IMPFISC")									,;	
+								STFGetStat("PORTIF")										,;
+								 .T.  } )  		
+			
+	
+		If Len(aRet) == 0 .OR. aRet[1] <> 0 
+			STFMessage("STWOpenDevi", "STOP", "Falha no Comando de Abertura e Selecao da Porta")
+			STFShowMessage("STWOpenDevi")
+			STWCloseDevice()
+			lRet := .F.
+		EndIf
+//Limpa o Objeto Impressora
+//STFClearEvents()
+
+//Inicializa o Objeto Impressora
+//STFStrategyECF() 
   dbSelectArea("SA1")
   SA1->(dbSetOrder(1))
   SA1->(dbSeek(FWxFilial("SA1") + SC5->C5_CLIENTE + SC5->C5_LOJACLI))
@@ -101,8 +189,10 @@ Local cTagCondFim	:= IIf(lCondensa, TAG_CONDEN_FIM , "")
 // Parâmetros:cImpressora – nome da impressora retornada pela função I%(I)!ARcPorta – *ual a porta ser+ utili"ada para comunicação. Pe'.: C,-?/ C,-0. Retorno:nHandle – Handle da Impressora 1ue dever+ ser informado em todas as outras funç2espara comunicação com a mesma
 
 Alert("Impressora: " + cImpressora)
-				STImPFNfce( @{"C",cImpressora,nHdlECF})
-	
+
+Alert("Porta: " + cPorta)
+//				STImPFNfce( @{"C",cImpressora,nHdlECF})
+
  // 				FwLogMsg("INFO",,"INTEGRATION",FunName(),"","01","Aguarde. Abrindo a Impressora...",0,(nStart - Seconds()),{})
 	//				nHdlECF := INFAbrir( cImpressora,cPorta )
 
@@ -115,6 +205,14 @@ Alert("Impressora: " + cImpressora)
 	cTexto := cTexto + Replicate("-", nMaxChar)						     + Chr(13) + Chr(10)
 
 	cTxImp := StrTran( cTexto, ',', '.' )
+      AAdd(aMessage, "Para efetuar trocas de mercadoria é necessário")
+    AAdd(aMessage, "apresentar este cupom ou documento original de")
+    AAdd(aMessage, "de venda. Produto: PRDT" + StrZero(Randomize(1, 999999), 6) + ".")
+    AEval(aMessage, {|cMessage| INFTexto(cMessage)})
+
+    // PRAZO DE TROCA
+    INFTexto("Prazo máximo para a troca: " + DToC(dDatabase + 7) + ".")
+    Alert(" LINHA 196")
 	STWManagReportPrint(cTxImp,1) //Envia comando para a Impressora
   /*
 			cTexto += TAG_CENTER_INI
@@ -206,7 +304,7 @@ STWPrintTextNotFiscal(cTexto)
   Next
 
     // MENSAGEM COM NO MÁXIMO 47 CARACTERES POR LINHA
-/*    AAdd(aMessage, "Para efetuar trocas de mercadoria é necessário")
+    AAdd(aMessage, "Para efetuar trocas de mercadoria é necessário")
     AAdd(aMessage, "apresentar este cupom ou documento original de")
     AAdd(aMessage, "de venda. Produto: PRDT" + StrZero(Randomize(1, 999999), 6) + ".")
     AEval(aMessage, {|cMessage| INFTexto(cMessage)})
