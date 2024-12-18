@@ -1,50 +1,9 @@
 #Include "TOTVS.ch"
 #Include "PROTHEUS.ch"
 #Include "TOPCONN.ch"
-#INCLUDE "FWPRINTSETUP.CH"
-#INCLUDE "RPTDEF.CH"
-#INCLUDE "FWADAPTEREAI.CH"
-
-#DEFINE TAG_CENTER_INI	"<ce>"	//centralizado
-#DEFINE TAG_CONDEN_INI	"<c>"	//condensado
-#DEFINE TAG_CONDEN_FIM	"</c>"	//condensado
-//Modalidades de TEF disponíveis no sistema
-#DEFINE TEF_SEMCLIENT_DEDICADO  "2"         // Utiliza TEF Dedicado Troca de Arquivos                      
-#DEFINE TEF_COMCLIENT_DEDICADO  "3"			// Utiliza TEF Dedicado com o Client
-#DEFINE TEF_DISCADO             "4"			// Utiliza TEF Discado 
-#DEFINE TEF_LOTE                "5"			// Utiliza TEF em Lote
-#DEFINE TEF_CLISITEF			"6"			// Utiliza a DLL CLISITEF
-#DEFINE TEF_CENTROPAG			"7"			// Utiliza a DLL tef mexico
-
-
-// Possibilidades de uso do parametro MV_AUTOCOM
-#DEFINE DLL_SIGALOJA			0			// Usa somente periféricos da SIGALOJA.DLL
-#DEFINE DLL_SIGALOJA_AUTOCOM	1			// Usa periféricos da SIGALOJA.DLL e da AUTOCOM
-#DEFINE DLL_AUTOCOM				2			// Usa somente periféricos da AUTOCOM
-
-// Retornos da GetRemoteType()
-#DEFINE REMOTE_JOB	 			-1			// Não há Remote, executando Job
-#DEFINE REMOTE_DELPHI			0			// O Remote está em Windows Delphi
-#DEFINE REMOTE_QT				1			// O Remote está em Windows QT
-#DEFINE REMOTE_LINUX			2			// O Remote está em Linux
-#DEFINE REMOTE_HTML				5			// Não há Remote, executando HTML
-
-// Tipos de equipamentos
-#DEFINE EQUIP_IMPFISCAL			1
-#DEFINE EQUIP_PINPAD			2
-#DEFINE EQUIP_CMC7				3
-#DEFINE EQUIP_GAVETA			4
-#DEFINE EQUIP_IMPCUPOM			5
-#DEFINE EQUIP_LEITOR			6
-#DEFINE EQUIP_BALANCA			7
-#DEFINE EQUIP_DISPLAY			8
-#DEFINE EQUIP_IMPCHEQUE			9
-#DEFINE EQUIP_IMPNAOFISCAL		10			
-
-// Qual DLL o Equipamento esta utilizando
-#DEFINE EQUIP_DLL_NENHUM		0			// O equipamento nao foi configurado 
-#DEFINE EQUIP_DLL_AUTOCOM		1			// O equipamento foi configurado para utilizar a AUTOCOM
-#DEFINE EQUIP_DLL_SIGALOJA		2			// O equipamento foi configurado para utilizar a SIGALOJA
+#Include "FWPRINTSETUP.CH"
+#Include "RPTDEF.CH"
+#Include "FWADAPTEREAI.CH"
 
 //---------------------------------------------------------
 /*/ Rotina FFFATR01
@@ -71,6 +30,7 @@ Return
 /*/
 //--------------------------------------------------
 Static Function ImprPV()
+  Local aArea     := FWGetArea()
   Local nPos      := 0
   Local nMaxChar  := 87           // Máximo de caracteres por linha
   Local nTtPedido := 0
@@ -82,6 +42,8 @@ Static Function ImprPV()
   Local aRetImp   := 0
   Local aGrupo    := {}
   Local aRegSC6   := {}
+  Local aParcelas := {}
+  Local aItePed   := {}
   Local cQry      := ""
   Local cDesc     := ""
   Local cLogo     := GetSrvProfString("Startpath","") + "lgmid01.png"
@@ -91,42 +53,14 @@ Static Function ImprPV()
 	Local oFont10n 	:= TFont():New("Arial",9,10,.T.,.T.,5,.T.,5,.T.,.F.)
   Local oPrint
 
-	oPrint:= TMSPrinter():New("Amarelinha")
-
-	oPrint:StartPage()
-
-  oPrint:SayBitmap(01,280,cLogo,280,180)
-
-  nLin := 200
-  oPrint:Say(nLin,002,"PV " + SC5->C5_NUM, oFont11n)
-  oPrint:Say(nLin+20,580,DToC(dDataBase) + Space(1) + Time(), oFont8)
-
-  nLin += 70
-  oPrint:Say(nLin,02,SM0->M0_NOME, oFont8)
-
-  nLin += 50
-  oPrint:Say(nLin,02,SC5->C5_CLIENTE + "/" + SC5->C5_LOJACLI + Space(2) + SC5->C5_XNOME, oFont8)
-
-  nLin += 50
-  oPrint:Say(nLin,02,"Fantasia " + AllTrim(SA1->A1_NREDUZ), oFont8)
-
-  nLin += 50
-  oPrint:Say(nLin,02,AllTrim(SA1->A1_END), oFont8)
+  dbSelectArea("SA1")
+  SA1->(dbSetOrder(1))
   
-  nLin += 50
-  oPrint:Say(nLin,02,"Fone " + Transform(SA1->A1_TEL,"@R 9999-9999"), oFont8)
+  If ! SA1->(dbSeek(FWxFilial("SA1") + SC5->C5_CLIENTE + SC5->C5_LOJACLI))
+     ApMsgInfo("Cliente não encontrado.")
 
-  nLin += 50
-  oPrint:Say(nLin,02,"Vend. " + Posicione("SA3",1,FWxFilial("SA3") + SC5->C5_VEND1,"A3_NOME"), oFont8)
-
-  nLin += 50
-  oPrint:Say(nLin,02,"Cond. Pagto " + Posicione("SE4",1,FWxFilial("SE4") + SC5->C5_CONDPAG,"E4_DESCRI"), oFont8)
-
-  nLin += 50
-  oPrint:Say(nLin,02,"It  Descricao" + Space(24) + "Qtde    Unit     Desc    Total", oFont8)
-
-  nLin += 50
-  oPrint:Say(nLin,02,Replicate("-", nMaxChar), oFont8)
+     Return
+  EndIf
 
  // -- Impressão dos itens
  // ----------------------
@@ -141,7 +75,7 @@ Static Function ImprPV()
   cQry += "   where SC9.D_E_L_E_T_ <> '*'"
   cQry += "     and SC9.C9_FILIAL = '" + FWxFilial("SC9") + "'"
   cQry += "     and SC9.C9_PEDIDO = '" + SC5->C5_NUM + "'"
-  cQry += "     and SC9.C9_BLEST  = ''"
+//  cQry += "     and SC9.C9_BLEST  = ''"
   cQry += "     and SC6.D_E_L_E_T_ <> '*'"
   cQry += "     and SC6.C6_FILIAL = '" + FWxFilial("SC6") + "'"
   cQry += "     and SC6.C6_NUM    = SC9.C9_PEDIDO"
@@ -155,6 +89,10 @@ Static Function ImprPV()
   If QSC9->(Eof())
      ApMsgInfo("Pedido Bloqueado ou Encerrado.")
 
+     QSC9->(dbCloseArea())
+
+     FWRestArea(aArea)
+
      Return
   EndIf 
 
@@ -167,17 +105,13 @@ Static Function ImprPV()
        aGrupo[nPos][03] += QSC9->C9_QTDLIB
     EndIf
 
-    nLin += 50
-    oPrint:Say(nLin,002, QSC9->C9_ITEM + " " + Substr(QSC9->B1_DESC,1,18), oFont8)
-    oPrint:Say(nLin,430, AllTrim(Str(QSC9->C9_QTDLIB)), oFont8)
-    oPrint:Say(nLin,480, Transform(QSC9->C9_PRCVEN,"@E 99,999.99"), oFont8)
-    oPrint:Say(nLin,600, Transform(QSC9->C6_VALDESC,"@E 9,999.99"), oFont8)
-    oPrint:Say(nLin,730, Transform(QSC9->C6_VALOR,"@E 99,999.99"), oFont8)
-
-    cDesc := AllTrim(Substr(QSC9->B1_DESC,26,25))
-    
-    nLin += 50
-    oPrint:Say(nLin,02,IIf(! Empty(cDesc),cDesc + Space(16),"") + "Lote:" + QSC9->C9_LOTECTL, oFont8)
+    aAdd(aItePed, {QSC9->C9_ITEM,;          // 01 - Item
+                   QSC9->B1_DESC,;          // 02 - Descrição do Produto
+                   QSC9->C9_QTDLIB,;        // 03 - Quantidade do Produto
+                   QSC9->C9_PRCVEN,;        // 04 - Preço de venda
+                   QSC9->C6_VALDESC,;       // 05 - Valor do desconto
+                   QSC9->C6_VALOR,;         // 06 - Valor total do item
+                   QSC9->C9_LOTECTL})       // 07 - Número do lote 
 
     nTtDesc   += QSC9->C6_VALDESC
     nTtPedido += QSC9->C6_VALOR
@@ -196,10 +130,70 @@ Static Function ImprPV()
 
   QSC9->(dbCloseArea()) 
 
-  aRetImp   := PegImpos(aRegSC6)   // Pegar os impostos
+  aParcelas := Condicao(nTtPedido,SC5->C5_CONDPAG,,SC5->C5_EMISSAO)    // Pegar as parcelas
+  aRetImp   := PegImpos(aRegSC6)                                       // Pegar os impostos
   nTtICMSST := aRetImp[01]
   nTtIPI    := aRetImp[02]
+  nTotal    := aRetImp[03]
+
+	oPrint:= TMSPrinter():New("Amarelinha")
+
+	oPrint:StartPage()
+  oPrint:SayBitmap(01,280,cLogo,280,180)
+
+  nLin := 200
+  oPrint:Say(nLin,002,"PV " + SC5->C5_NUM, oFont11n)
+  oPrint:Say(nLin+20,580,DToC(dDataBase) + Space(1) + Time(), oFont8)
+
+  nLin += 70
+  oPrint:Say(nLin,002,IIf(! Empty(SA1->A1_XROTA),SubStr(Posicione("Z02",1,FWxFilial("Z02") + SA1->A1_XROTA,"Z02_DESCRI"),1,20),""), oFont8)
+  oPrint:Say(nLin,350,AllTrim(SA1->A1_BAIRRO), oFont8)
+
+  nLin += 50
+  oPrint:Say(nLin,02,AllTrim(SA1->A1_MUN), oFont8)
+
+  nLin += 50
+  oPrint:Say(nLin,02,SC5->C5_CLIENTE + "/" + SC5->C5_LOJACLI + Space(2) + SubStr(SC5->C5_XNOME,1,34), oFont8)
+
+  nLin += 50
+  oPrint:Say(nLin,02,"Fantasia " + AllTrim(SA1->A1_NREDUZ), oFont8)
+
+  nLin += 50
+  oPrint:Say(nLin,02,AllTrim(SA1->A1_END), oFont8)
   
+  nLin += 50
+  oPrint:Say(nLin,02,"Fone " + Transform(SA1->A1_TEL,"@R 9999-9999"), oFont8)
+
+  nLin += 50
+  oPrint:Say(nLin,02,"P. Ref. " + AllTrim(SA1->A1_COMPLEM), oFont8)
+
+  nLin += 50
+  oPrint:Say(nLin,02,"Vend. " + Posicione("SA3",1,FWxFilial("SA3") + SC5->C5_VEND1,"A3_NOME"), oFont8)
+
+  nLin += 50
+  oPrint:Say(nLin,002,"Vencto " + DToC(aParcelas[01][01]), oFont8)
+  oPrint:Say(nLin,280,"Cond. Pagto " + Posicione("SE4",1,FWxFilial("SE4") + SC5->C5_CONDPAG,"E4_DESCRI"), oFont8)
+
+  nLin += 50
+  oPrint:Say(nLin,02,"It  Descricao" + Space(24) + "Qtde    Unit     Desc    Total", oFont8)
+
+  nLin += 50
+  oPrint:Say(nLin,02,Replicate("-", nMaxChar), oFont8)
+
+  For nPos := 1 To Len(aItePed)
+      nLin += 50
+      oPrint:Say(nLin,002, aItePed[nPos][01] + " " + Substr(aItePed[nPos][02],1,18), oFont8)
+      oPrint:Say(nLin,430, AllTrim(Str(aItePed[nPos][03])), oFont8)
+      oPrint:Say(nLin,480, Transform(aItePed[nPos][04],"@E 99,999.99"), oFont8)
+      oPrint:Say(nLin,600, Transform(aItePed[nPos][05],"@E 9,999.99"), oFont8)
+      oPrint:Say(nLin,730, Transform(aItePed[nPos][06],"@E 99,999.99"), oFont8)
+
+      cDesc := AllTrim(Substr(aItePed[nPos][02],26,25))
+    
+      nLin += 50
+      oPrint:Say(nLin,02,IIf(! Empty(cDesc),cDesc + Space(16),"") + "Lote:" + aItePed[nPos][07], oFont8) 
+  Next
+
   nLin += 45
   oPrint:Say(nLin,002,Replicate("-", nMaxChar), oFont8)
 
@@ -221,23 +215,24 @@ Static Function ImprPV()
 
   nLin += 50
   oPrint:Say(nLin,380,"TOTAL DO PEDIDO", oFont8)
+  oPrint:Say(nLin,710, Transform((nTtPedido + nTotal),"@E 99,999.99"), oFont8)
 
   nLin += 50
-  oPrint:Say(nLin,020,"OBS.: ", oFont8)
+  oPrint:Say(nLin,02,"OBS.: ", oFont8)
 
   If Empty(SC5->C5_COMENT)
      nLin += 40
    else  
-     oPrint:Say(nLin,060,Substr(SC5->C5_COMENT,1,100), oFont8)
+     oPrint:Say(nLin,080,Substr(SC5->C5_COMENT,1,100), oFont8)
      
      If ! Empty(SubStr(SC5->C5_COMENT,101,200))
         nLin += 50
-        oPrint:Say(nLin,060,Substr(SC5->C5_COMENT,101,200), oFont8)
+        oPrint:Say(nLin,080,Substr(SC5->C5_COMENT,101,200), oFont8)
      EndIf
   
      If ! Empty(SubStr(SC5->C5_COMENT,201,50))
         nLin += 50
-        oPrint:Say(nLin,060,Substr(SC5->C5_COMENT,201,50), oFont8)
+        oPrint:Say(nLin,080,Substr(SC5->C5_COMENT,201,50), oFont8)
      EndIf
   EndIf   
 
@@ -249,7 +244,7 @@ Static Function ImprPV()
   For nPos := 1 To Len(aGrupo)
       nLin += 45
       oPrint:Say(nLin,020,aGrupo[nPos][02], oFont10n)
-      oPrint:Say(nLin,500,Transform(aGrupo[nPos][03],"@E 99,999.99"), oFont10n)
+      oPrint:Say(nLin,540,Transform(aGrupo[nPos][03],"@E 99,999.99"), oFont10n)
   Next
 
   nLin += 45
@@ -276,15 +271,15 @@ Static Function ImprPV()
 
   If ! QSE1->(Eof())
      nLin += 60
-     oPrint:Say(nLin,220,"===>>TÍTULOS EM ABERTO <<===", oFont8)
+     oPrint:Say(nLin,200,"===>>TÍTULOS EM ABERTO <<===", oFont8)
    
      nLin += 50
      oPrint:Say(nLin,02,Replicate("-", nMaxChar), oFont8)
    
      nLin += 50
      oPrint:Say(nLin,002,"EMISSAO", oFont8)
-     oPrint:Say(nLin,200,"VENCTO" , oFont8)
-     oPrint:Say(nLin,380,"TÍTULO" , oFont8)
+     oPrint:Say(nLin,190,"VENCTO" , oFont8)
+     oPrint:Say(nLin,350,"TÍTULO" , oFont8)
      oPrint:Say(nLin,570,"TP.COB.", oFont8)
      oPrint:Say(nLin,710,"VALOR"  , oFont8)
 
@@ -295,11 +290,11 @@ Static Function ImprPV()
 
      While ! QSE1->(Eof())  
        nLin += 50
-       oPrint:Say(nLin,002,SToD(DToC(QSE1->E1_EMISSAO)), oFont8)
-       oPrint:Say(nLin,200,SToD(DToC(QSE1->E1_VENCREA)), oFont8)
-       oPrint:Say(nLin,380,AllTrim(QSE1->E1_PREFIXO) + "-" + AllTrim(QSE1->E1_NUM) + "/" + AllTrim(QSE1->E1_PARCELA), oFont8)
+       oPrint:Say(nLin,002,DToC(SToD(QSE1->E1_EMISSAO)), oFont8)
+       oPrint:Say(nLin,190,DToC(SToD(QSE1->E1_VENCREA)), oFont8)
+       oPrint:Say(nLin,350,AllTrim(QSE1->E1_PREFIXO) + "-" + AllTrim(QSE1->E1_NUM) + "/" + AllTrim(QSE1->E1_PARCELA), oFont8)
        oPrint:Say(nLin,570,IIf(AllTrim(QSE1->E1_TIPO) == "BOL","Boleto",;
-                            IIf(AllTrim(QSE1->E1_TIPO),"N.Fiscal","")), oFont8)
+                            IIf(AllTrim(QSE1->E1_TIPO) == "NF","N.Fiscal","")), oFont8)
        oPrint:Say(nLin,730,Transform(QSE1->E1_SALDO,"@E 99,999.99"), oFont8)
      
        nTtFin += QSE1->E1_SALDO
@@ -307,19 +302,20 @@ Static Function ImprPV()
        QSE1->(dbSkip())
      EndDo
 
-     QSE1->(dbCloseArea())
-
      nLin += 45
      oPrint:Say(nLin,02,Replicate("-", nMaxChar), oFont8)
 
      nLin += 50
-     oPrint:Say(nLin,380,"TOTAL EM ABERTO ===>>", oFont8)
+     oPrint:Say(nLin,330,"TOTAL EM ABERTO ===>>", oFont8)
      oPrint:Say(nLin,730,Transform(nTtFin,"@E 99,999.99"), oFont8)
   EndIf
 
-	oPrint:EndPage()
+  QSE1->(dbCloseArea())
 	
+  oPrint:EndPage()
 	oPrint:Print()
+
+  FWRestArea(aArea)
 Return
 
 //--------------------------------------------------
@@ -332,9 +328,12 @@ Return
 /*/
 //--------------------------------------------------
 Static Function PegImpos(aRegSC6)
-  Local nX       := 0
-  Local nTotalST := 0
-  Local nTotIPI  := 0
+  Local nX        := 0
+  Local nBaseICMS := 0
+  Local nTotalST  := 0
+  Local nTotIPI   := 0
+  Local nTotPed   := 0
+  Local nTotFECST := 0             // Fundo de pobreza no ICMS ST
 
   dbSelectArea("SB1")
   SB1->(dbSetOrder(1))
@@ -376,9 +375,17 @@ Static Function PegImpos(aRegSC6)
  // -- Pega os valores
  // ------------------
   For nX := 1 To Len(aRegSC6)
-      nTotalST += MaFisRet(nX, "IT_VALSOL")
-      nTotIPI  += MaFisRet(nX, "IT_VALIPI")
+      nBaseICMS := MaFisRet(nX,"IT_BASEICM")
+      nTotPed   += Round((nBaseICMS * 1) / 100,2)
+      nTotFECST += MaFisRet(nX,"IT_VFECPST")
   Next
+Alert(MaFisRet(,"NF_BASEICM"))
+Alert(MaFisRet(,"NF_BASESOL"))
+Alert(MaFisRet(,"NF_VALSOL"))
+Alert(nTotFECST)
+
+  nTotalST := MaFisRet(,"NF_VALSOL") - nTotFECST
+  nTotIPI  := MaFisRet(,"NF_VALIPI")
 
   MaFisEnd()
-Return {nTotalST, nTotIPI}
+Return {nTotalST, nTotIPI, nTotPed}
