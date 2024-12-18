@@ -374,7 +374,7 @@ Static Function PegImpos(aRegSC6, nTtIPI, nTtICMSST, nTtFECST)
       nTtFECST += MaFisRet(nX,"IT_VFECPST")
   Next
 
-  nnTtIPI   := MaFisRet(,"NF_VALIPI")
+  nTtIPI    := MaFisRet(,"NF_VALIPI")
   nTtICMSST := MaFisRet(,"NF_VALSOL") - nTtFECST
 
   MaFisEnd()
