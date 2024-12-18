@@ -33,13 +33,13 @@ Static Function ImprPV()
   Local aArea     := FWGetArea()
   Local nPos      := 0
   Local nMaxChar  := 87           // Máximo de caracteres por linha
-  Local nTtPedido := 0
+  Local nTtVenda  := 0
   Local nTtDesc   := 0
   Local nTtIPI    := 0
   Local nTtICMSST := 0
-  Local nTotal    := 0
+  Local nTtFECST  := 0
+  Local nTtPedido := 0
   Local nTtFin    := 0
-  Local aRetImp   := 0
   Local aGrupo    := {}
   Local aRegSC6   := {}
   Local aParcelas := {}
@@ -75,7 +75,7 @@ Static Function ImprPV()
   cQry += "   where SC9.D_E_L_E_T_ <> '*'"
   cQry += "     and SC9.C9_FILIAL = '" + FWxFilial("SC9") + "'"
   cQry += "     and SC9.C9_PEDIDO = '" + SC5->C5_NUM + "'"
-//  cQry += "     and SC9.C9_BLEST  = ''"
+  cQry += "     and SC9.C9_BLEST  = ''"
   cQry += "     and SC6.D_E_L_E_T_ <> '*'"
   cQry += "     and SC6.C6_FILIAL = '" + FWxFilial("SC6") + "'"
   cQry += "     and SC6.C6_NUM    = SC9.C9_PEDIDO"
@@ -113,8 +113,8 @@ Static Function ImprPV()
                    QSC9->C6_VALOR,;         // 06 - Valor total do item
                    QSC9->C9_LOTECTL})       // 07 - Número do lote 
 
-    nTtDesc   += QSC9->C6_VALDESC
-    nTtPedido += QSC9->C6_VALOR
+    nTtDesc  += QSC9->C6_VALDESC
+    nTtVenda += QSC9->C6_VALOR
 
     aAdd(aRegSC6,{QSC9->C9_PRODUTO,;
                   QSC9->C6_TES,;
@@ -130,11 +130,10 @@ Static Function ImprPV()
 
   QSC9->(dbCloseArea()) 
 
+  PegImpos(@aRegSC6, @nTtIPI, @nTtICMSST, @nTtFECST)                   // Pegar os impostos
+
+  nTtPedido := (nTtVenda + nTtIPI + nTtICMSST + nTtFECST) - nTtDesc
   aParcelas := Condicao(nTtPedido,SC5->C5_CONDPAG,,SC5->C5_EMISSAO)    // Pegar as parcelas
-  aRetImp   := PegImpos(aRegSC6)                                       // Pegar os impostos
-  nTtICMSST := aRetImp[01]
-  nTtIPI    := aRetImp[02]
-  nTotal    := aRetImp[03]
 
 	oPrint:= TMSPrinter():New("Amarelinha")
 
@@ -147,7 +146,7 @@ Static Function ImprPV()
 
   nLin += 70
   oPrint:Say(nLin,002,IIf(! Empty(SA1->A1_XROTA),SubStr(Posicione("Z02",1,FWxFilial("Z02") + SA1->A1_XROTA,"Z02_DESCRI"),1,20),""), oFont8)
-  oPrint:Say(nLin,350,AllTrim(SA1->A1_BAIRRO), oFont8)
+  oPrint:Say(nLin,400,AllTrim(SA1->A1_BAIRRO), oFont8)
 
   nLin += 50
   oPrint:Say(nLin,02,AllTrim(SA1->A1_MUN), oFont8)
@@ -182,16 +181,16 @@ Static Function ImprPV()
 
   For nPos := 1 To Len(aItePed)
       nLin += 50
-      oPrint:Say(nLin,002, aItePed[nPos][01] + " " + Substr(aItePed[nPos][02],1,18), oFont8)
+      oPrint:Say(nLin,002, aItePed[nPos][01] + " " + Substr(aItePed[nPos][02],1,19), oFont8)
       oPrint:Say(nLin,430, AllTrim(Str(aItePed[nPos][03])), oFont8)
       oPrint:Say(nLin,480, Transform(aItePed[nPos][04],"@E 99,999.99"), oFont8)
       oPrint:Say(nLin,600, Transform(aItePed[nPos][05],"@E 9,999.99"), oFont8)
       oPrint:Say(nLin,730, Transform(aItePed[nPos][06],"@E 99,999.99"), oFont8)
 
-      cDesc := AllTrim(Substr(aItePed[nPos][02],26,25))
+      cDesc := AllTrim(Substr(aItePed[nPos][02],20,25))
     
       nLin += 50
-      oPrint:Say(nLin,02,IIf(! Empty(cDesc),cDesc + Space(16),"") + "Lote:" + aItePed[nPos][07], oFont8) 
+      oPrint:Say(nLin,02,IIf(! Empty(cDesc),cDesc + Space(05),"") + "Lote:" + aItePed[nPos][07], oFont8) 
   Next
 
   nLin += 45
@@ -199,7 +198,7 @@ Static Function ImprPV()
 
   nLin += 50
   oPrint:Say(nLin,380,"VALOR TABELA", oFont8)
-  oPrint:Say(nLin,710, Transform(nTtPedido,"@E 99,999.99"), oFont8)
+  oPrint:Say(nLin,710, Transform(nTtVenda,"@E 99,999.99"), oFont8)
 
   nLin += 50
   oPrint:Say(nLin,380,"DESCONTO", oFont8)
@@ -215,7 +214,7 @@ Static Function ImprPV()
 
   nLin += 50
   oPrint:Say(nLin,380,"TOTAL DO PEDIDO", oFont8)
-  oPrint:Say(nLin,710, Transform((nTtPedido + nTotal),"@E 99,999.99"), oFont8)
+  oPrint:Say(nLin,710, Transform(nTtPedido,"@E 99,999.99"), oFont8)
 
   nLin += 50
   oPrint:Say(nLin,02,"OBS.: ", oFont8)
@@ -244,7 +243,7 @@ Static Function ImprPV()
   For nPos := 1 To Len(aGrupo)
       nLin += 45
       oPrint:Say(nLin,020,aGrupo[nPos][02], oFont10n)
-      oPrint:Say(nLin,540,Transform(aGrupo[nPos][03],"@E 99,999.99"), oFont10n)
+      oPrint:Say(nLin,600,Transform(aGrupo[nPos][03],"@E 99,999.99"), oFont10n)
   Next
 
   nLin += 45
@@ -327,13 +326,8 @@ Return
   @since   13/12/2024 - Desenvolvimento da Rotina.
 /*/
 //--------------------------------------------------
-Static Function PegImpos(aRegSC6)
-  Local nX        := 0
-  Local nBaseICMS := 0
-  Local nTotalST  := 0
-  Local nTotIPI   := 0
-  Local nTotPed   := 0
-  Local nTotFECST := 0             // Fundo de pobreza no ICMS ST
+Static Function PegImpos(aRegSC6, nTtIPI, nTtICMSST, nTtFECST)
+  Local nX := 0
 
   dbSelectArea("SB1")
   SB1->(dbSetOrder(1))
@@ -374,18 +368,14 @@ Static Function PegImpos(aRegSC6)
 
  // -- Pega os valores
  // ------------------
-  For nX := 1 To Len(aRegSC6)
-      nBaseICMS := MaFisRet(nX,"IT_BASEICM")
-      nTotPed   += Round((nBaseICMS * 1) / 100,2)
-      nTotFECST += MaFisRet(nX,"IT_VFECPST")
-  Next
-Alert(MaFisRet(,"NF_BASEICM"))
-Alert(MaFisRet(,"NF_BASESOL"))
-Alert(MaFisRet(,"NF_VALSOL"))
-Alert(nTotFECST)
+  nTtFECST := 0
 
-  nTotalST := MaFisRet(,"NF_VALSOL") - nTotFECST
-  nTotIPI  := MaFisRet(,"NF_VALIPI")
+  For nX := 1 To Len(aRegSC6)
+      nTtFECST += MaFisRet(nX,"IT_VFECPST")
+  Next
+
+  nnTtIPI   := MaFisRet(,"NF_VALIPI")
+  nTtICMSST := MaFisRet(,"NF_VALSOL") - nTtFECST
 
   MaFisEnd()
-Return {nTotalST, nTotIPI, nTotPed}
+Return
