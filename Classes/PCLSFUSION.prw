@@ -23,20 +23,20 @@ Class PCLSFUSION
  // --- Definição dos métodos
  // -------------------------
   Method New() Constructor
-  Method sendClientes(pCliente,pLoja)                      // Montar requisição Cadastro de Cliente.
-  Method sendVeiculos(pCodigo)                             // Montar requisição Cadastro de Veí­culo.
-  Method sendMotoristas(pCodigo)                           // Montar requisição Cadastro de Motorista.
-  Method sendAjudantes(pCodigo)                            // Montar requisição Cadastro de Ajudante.
-  Method pegarPrxSeq(pPedido)                              // Pegar o próximo sequencial do pedido no FUSION. 
-  Method ValidaCad(pPedido)                                // Validar se os cadastros então corretos.
-  Method lerPedidoVenda(pPedido,pSeq,pSC5,pNf,pSerie)      // Verificar se o pedido de venda está valido para envio e montar.
-  Method saveEntregaServico(pStatus,pForma,lCarga)         // Montar de Pedido de Venda para envio.
-  Method detalheCarga(pCarga,pDtInicio,pDtFim)             // Montar requisição do Detalhe da Carga.
-  Method getIntErp()                                       // Montar requisição para importação de Carga. 
-  Method setIntErp(pIntId,pCarga)                          // Informar ao FUSION a gravação da carga.
-  Method altCarga(pForma,pPedido,pRecno)                   // Montar requisição e enviar para FUSION. 
-  Method atualizaCarga()                                   // Monta requisição para atualizar dados da carga.
-  Method Enviar(pMetodo,pSchedule)                         // Enviar para o FUSION.
+  Method sendClientes(pCliente,pLoja)                                  // Montar requisição Cadastro de Cliente.
+  Method sendVeiculos(pCodigo)                                         // Montar requisição Cadastro de Veí­culo.
+  Method sendMotoristas(pCodigo)                                       // Montar requisição Cadastro de Motorista.
+  Method sendAjudantes(pCodigo)                                        // Montar requisição Cadastro de Ajudante.
+  Method pegarPrxSeq(pPedido)                                          // Pegar o próximo sequencial do pedido no FUSION. 
+  Method ValidaCad(pPedido)                                            // Validar se os cadastros então corretos.
+  Method lerPedidoVenda(pPedido,pSeq,pSC5,pNf,pSerie,pCarga,SeqCar)    // Verificar se o pedido de venda está valido para envio e montar.
+  Method saveEntregaServico(pStatus,pForma,lCarga)                     // Montar de Pedido de Venda para envio.
+  Method detalheCarga(pCarga,pDtInicio,pDtFim)                         // Montar requisição do Detalhe da Carga.
+  Method getIntErp()                                                   // Montar requisição para importação de Carga. 
+  Method setIntErp(pIntId,pCarga)                                      // Informar ao FUSION a gravação da carga.
+  Method altCarga(pForma,pPedido,pRecno)                               // Montar requisição e enviar para FUSION. 
+  Method atualizaCarga()                                               // Monta requisição para atualizar dados da carga.
+  Method Enviar(pMetodo,pSchedule)                                     // Enviar para o FUSION.
 EndClass
 
 //---------------------------------------------------
@@ -461,16 +461,19 @@ Return lRet
   @since   17/10/2024	
 /*/
 //----------------------------------------------------------------------
-Method lerPedidoVenda(pPedido,pSeq,pSC5,pNF,pSerie) Class PCLSFUSION
+Method lerPedidoVenda(pPedido,pSeq,pSC5,pNF,pSerie,pCarga,pSeqCar) Class PCLSFUSION
   Local cC5Num    := pPedido
   Local nSeq      := pSeq
   Local lLerSC5   := pSC5
   Local cNumNF    := pNF
   Local cSerieNF  := pSerie
+  Local cCarga    := pCarga
+  Local cSeqCar   := pSeqCar
   Local aRet      := {.T.,"",{},{}} // Posição 03 para pedido bloqueado não vai ser usado na FIKA FRIO
   Local aRegLib   := {}
   Local cQuery    := ""
   Local cDsRegiao := ""
+  Local cDsRota   := ""
   Local nLPeso    := 0
   Local nLCubagem := 0
   Local nLTtVend  := 0
@@ -509,6 +512,12 @@ Method lerPedidoVenda(pPedido,pSeq,pSC5,pNF,pSerie) Class PCLSFUSION
      cQuery += "     and SC9.C9_PEDIDO  = '" + SC5->C5_NUM + "'"
      cQuery += "     and SC9.C9_NFISCAL = '" + cNumNF + "'"
      cQuery += "     and SC9.C9_SERIENF = '" + cSerieNF + "'"
+
+     If ! Empty(cCarga)
+        cQuery += " and SC9.C9_CARGA  = '" + cCarga + "'"
+        cQuery += " and SC9.C9_SEQCAR = '" + cSeqCar + "'"
+     EndIf
+
      cQuery += "     and SB1.D_E_L_E_T_ <> '*'"
      cQuery += "     and SB1.B1_FILIAL  = '" + xFilial("SB1") + "'"
      cQuery += "     and SB1.B1_COD     = SC9.C9_PRODUTO"
@@ -543,6 +552,7 @@ Method lerPedidoVenda(pPedido,pSeq,pSC5,pNF,pSerie) Class PCLSFUSION
   EndIf  
 
   cDsRegiao := AllTrim(Posicione("SX5",1,FWxFilial("SX5") + "A2" + SC5->C5_XREGIAO,"X5_DESCRI"))
+  cDsRota   := AllTrim(Posicione("Z02",1,FWxFilial("Z02") + SA1->A1_XROTA,"Z02_DESCRI"))
 
   While ! QPSQ->(Eof()) 
     If QPSQ->BLOQ == "L"
@@ -570,7 +580,9 @@ Method lerPedidoVenda(pPedido,pSeq,pSC5,pNF,pSerie) Class PCLSFUSION
                      SC5->C5_XREGIAO,;                       // 22 - Código da Região
                      cDsRegiao,;                             // 23 - Descrição da Região
                      QPSQ->RECNO,;                           // 24 - Número do registro
-                     "L"})                                   // 25 - Status do item (L-Liberado/B-Bloqueado)
+                     "L",;                                   // 25 - Status do item (L-Liberado/B-Bloqueado)
+                     SA1->A1_XROTA,;                         // 26 - Código da Rota
+                     cDsRota})                               // 27 - Descrição da Rota
 
        nLPeso    += (QPSQ->QTDE * QPSQ->B1_PESO)
        nLCubagem += QPSQ->QTDE * (QPSQ->B5_COMPRLC * QPSQ->B5_ALTURLC * QPSQ->B5_LARGLC)
@@ -598,7 +610,8 @@ Method lerPedidoVenda(pPedido,pSeq,pSC5,pNF,pSerie) Class PCLSFUSION
 Return aRet
 
 //--------------------------------------------------
-/*/{protheusDoc.marcadores_ocultos} PCLSFUSION
+/*/ Classe PCLSFUSION
+
   Montar a requisição do pedido de venda
 
   @Parâmetro: pStatus  - 'N' = Normal
@@ -628,7 +641,7 @@ Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCL
   Default cSerieNF := IIF(ValType(pSerieNF) != "U", pSerieNF, Alltrim(SC5->C5_SERIE))
 
   If lCarga
-     cQry := "Select * from "+ RetSqlName("SC9") +" SC9 "
+     cQry := "Select * from " + RetSqlName("SC9") + " SC9"
      cQry += "  where SC9.D_E_L_E_T_ <> '*' "
      cQry += "    and SC9.C9_FILIAL  = '" + SC5->C5_FILIAL + "'"
      cQry += "    and SC9.C9_PEDIDO  = '" + SC5->C5_NUM + "'"
@@ -674,11 +687,11 @@ Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCL
   self:cBody += '          "tipo": "",'
   self:cBody += '          "ent_ou_serv": "Entrega",'
   self:cBody += '          "pedido_erp": "' + cPedido + '",'
-  self:cBody += '          "forma_pgto": "'+cCondPag+'",'
+  self:cBody += '          "forma_pgto": "' + cCondPag + '",'
   self:cBody += '          "status": "' + cStatusFUS + '",'
   self:cBody += '          "obs": "",'
   self:cBody += '          "num_ped_conf": "' + cPedido + '",'
-  self:cBody += '          "carga": "' + self:aRegistro[01][21] + '",'
+  self:cBody += '          "carga": "' + IIf(lCarga,self:aRegistro[01][21],"") + '",'
   
   If self:aRegistro[01][13] > 0 
      self:cBody += '        "cubagem": "' + AllTrim(Str(self:aRegistro[01][13])) + '",'
@@ -732,10 +745,10 @@ Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCL
   self:cBody += '          "retem_icms_cliente": "N",'
   self:cBody += '          "permite_retira_cliente": "N",'
   self:cBody += '          "rede_loja_cliente": "' + SA1->A1_LOJA + '",'
-  self:cBody += '          "rota_cod_erp": "' + self:aRegistro[01][22] + '",'
-  self:cBody += '          "rota_descricao": "' + FwNoAccent(self:aRegistro[01][23]) + '",'
-  self:cBody += '          "praca_cod_erp": "' + self:aRegistro[01][22] + '",'
-  self:cBody += '          "praca_descricao": "' + FwNoAccent(self:aRegistro[01][23]) + '",'
+  self:cBody += '          "rota_cod_erp": "' + self:aRegistro[01][26] + '",'
+  self:cBody += '          "rota_descricao": "' + FwNoAccent(self:aRegistro[01][27]) + '",'
+  self:cBody += '          "praca_cod_erp": "' + self:aRegistro[01][26] + '",'
+  self:cBody += '          "praca_descricao": "' + FwNoAccent(self:aRegistro[01][27]) + '",'
   self:cBody += '          "vendedor_erp": "' + FwNoAccent(Posicione("SA3",1,FWxFilial("SA3") + self:aRegistro[01][18],"A3_NREDUZ")) + '",'
   self:cBody += '          "data_pedido": "' + AllTrim(Str(Year(self:aRegistro[01][19])) + "-" +;
                                                        StrZero(Month(self:aRegistro[01][19]),2) +;
@@ -971,34 +984,33 @@ Return
   @since   01/10/2024 
 /*/
 //--------------------------------------------------
-Method altCarga(pForma,pPedido,pCarga) Class PCLSFUSION 
+Method altCarga(pForma,pPedido,pRecno) Class PCLSFUSION 
+  Local aArea     := FWGetArea()
   Local aRet      := {}
   Local nId       := 0
   Local cForma    := pForma
   Local aPedido   := pPedido
-  Local lNumCarga := pCarga
+  Local nRecnoSC9 := pRecno
+//  Local lNumCarga := pCarga
   //Local lEnvia    := .T. //Valida o envio do Pedido de Venda ao Fusion
 
+  dbSelectArea("SC5")
+  SC5->(dbSetOrder(1))
+
+  dbSelectArea("SC9")
+  SC9->(dbSetOrder(1))
+
   For nId := 1 To Len(aPedido)
-      dbSelectArea("SC5")
-      SC5->(dbSetOrder(1))
+      SC9->(dbGoto(nRecnoSC9))
 
-      If SC5->(dbSeek(FWxFilial("SC5") + aPedido[nId]))
+//      If SC5->(dbSeek(FWxFilial("SC5") + aPedido[nId]))
         
-        /*
-        lEnvia := u_ValidEnv()
-
-        If !lEnvia
-          Loop
-        EndIF 
-        */
-
         // --- Parametro: 1 - Pedido Venda
         //                2 - Sequencial do Pedido
         //                3 - Validar pelo SC5 = .T. ou SC9 = .F.
         //                4 - Excluído = .T. 
         // ------------------------------------------------------
-         aRet := self:LerPedidoVenda(SC5->C5_NUM,Val(SC5->C5_XSEQFUS),.F.,.F.)
+         aRet := self:lerPedidoVenda(aPedido[nId],Val(SC9->C9_XSEQFUS),.F.,"","",SC9->C9_CARGA,SC9->C9_SEQCARG)
 
          If ! aRet[01]
             ApMsgInfo(aRet[02],"ATENÇÃO - Integração Fusion")
@@ -1016,14 +1028,16 @@ Method altCarga(pForma,pPedido,pCarga) Class PCLSFUSION
            // --------------------------------------------------------------------
             self:saveEntregaServico("1", cForma, lNumCarga)
 
-              aRet := self:Enviar("saveEntregaServico") // Enviar para FUSION
+            aRet := self:Enviar("saveEntregaServico") // Enviar para FUSION
 
-            If !aRet[01]
+            If ! aRet[01]
                ApMsgAlert(aRet[02],"ATENÇÃO - Integração Fusion")  
             EndIf
          EndIf   
-      EndIf  
+//      EndIf  
   Next
+
+  FWRestArea(aArea)
 Return   
 
 //-------------------------------------------------

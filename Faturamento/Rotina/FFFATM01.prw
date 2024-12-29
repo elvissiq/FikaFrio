@@ -31,7 +31,7 @@ User Function FFFATM01()
         Return
      EndIf 
      
-     aRet := oFusion:LerPedidoVenda(SC5->C5_NUM,Val(cSeqFus),.F.,"","")
+     aRet := oFusion:LerPedidoVenda(SC5->C5_NUM,Val(cSeqFus),.F.,"","","","")
 
      If aRet[01]
         oFusion:aRegistro := IIf(Len(aRet[04]) > 0,aRet[04],aRet[03])                    // Registro do Pedido de Venda

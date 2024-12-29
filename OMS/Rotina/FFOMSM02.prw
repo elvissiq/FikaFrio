@@ -105,7 +105,6 @@ Static Function fnF01Pro()
   Next
 
   If lProcesOK
-//     cMsgExc := cCmdMsg + "('Processamento realizado com sucesso.')"
      ApMsgInfo("Processamento realizado com sucesso.","INFORMAÇÃO")
    else
      If Len(aErro) > 0 
@@ -114,11 +113,8 @@ Static Function fnF01Pro()
         Next
      EndIf
 
-//     cMsgExc := "ApMsgAlert('" + AllTrim(cMsgExc) + "','ATENÇÃO')"
      ApMsgAlert(AllTrim(cMsgExc),"ATENÇÃO")
   EndIf
-
-//  &cMsgExc  
 Return
 
 //-------------------------------------------------------------------

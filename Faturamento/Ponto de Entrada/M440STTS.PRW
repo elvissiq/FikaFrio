@@ -38,7 +38,7 @@ User Function M440STTS()
         Return
      EndIf              
 
-     aRet := oFusion:lerPedidoVenda(SC5->C5_NUM, nPrxSeq, .F., "", "")
+     aRet := oFusion:lerPedidoVenda(SC5->C5_NUM, nPrxSeq, .F.,"","","","")
 
      If aRet[01]
        // -- Itens do Pedido de Venda Liberada

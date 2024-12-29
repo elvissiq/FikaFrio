@@ -53,7 +53,7 @@ User Function M450CMAN()
                 Return .F.
              EndIf 
              
-             aRet := oFusion:LerPedidoVenda(SC5->C5_NUM,nPrxSeq,.F.,"","")
+             aRet := oFusion:LerPedidoVenda(SC5->C5_NUM,nPrxSeq,.F.,"","","","")
 
              If aRet[01]
                 If Len(aRet[04]) > 0                                // Itens do Pedido de Venda Liberada                      

@@ -44,7 +44,7 @@ User Function MTA455I()
         ApMsgAlert("Existe produto(s) sem cadastro complementar. " + CRLF +;
                    "Verifique o cadastro 'Complemento de Produto'.","ATENÇÃO")
       else
-        aRet := oFusion:LerPedidoVenda(SC5->C5_NUM, nPrxSeq, .F., "", "")
+        aRet := oFusion:LerPedidoVenda(SC5->C5_NUM, nPrxSeq,.F.,"","","","")
 
         If aRet[01]
          // -- Itens do Pedido de Venda Liberada
