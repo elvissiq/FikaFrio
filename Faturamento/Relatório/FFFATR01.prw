@@ -181,7 +181,7 @@ MemoWrite("C:\temp\TESTE.txt",cQry)
                       0,;                                // 19 - Total do Desconto
                       QSC9->C5_TIPO,;                    // 20 - C:Cliente , F:Fornecedor
                       QSC9->C5_TIPOCLI,;                 // 21 - Tipo do Cliente/Fornecedor
-                      AllTrim(QSC9->A1_XNUMEND)})        // 20 - Número do endereço
+                      AllTrim(QSC9->A1_XNUMEND)})        // 22 - Número do endereço
 
        nPos := Len(aCabPed) 
     EndIf
@@ -263,7 +263,7 @@ MemoWrite("C:\temp\TESTE.txt",cQry)
       cTexto += "<n>" + aCabPed[nX][11] + "</n>" + Chr(13) + Chr(10)
       cTexto += "<n>" + aCabPed[nX][02] + "/" + aCabPed[nX][03] + " " + SubStr(aCabPed[nX][04],1,34) + "</n>" + Chr(13) + Chr(10)
       cTexto += "<n>Fantasia " + aCabPed[nX][05] + "</n>" + Chr(13) + Chr(10)
-      cTexto += "<n>" + aCabPed[nX][08] + IIf(Empty(aCabPed[nX][20]),"",", " + aCabPed[nX][20]) + "</n>" + Chr(13) + Chr(10)
+      cTexto += "<n>" + aCabPed[nX][08] + IIf(Empty(aCabPed[nX][22]),"",", " + aCabPed[nX][22]) + "</n>" + Chr(13) + Chr(10)
       cTexto += "<n>Fone " + Transform(aCabPed[nX][12],"@R 9999-9999") + "</n>" + Chr(13) + Chr(10)
       cTexto += "<n>P. Ref. " + aCabPed[nX][09] + "</n>" + Chr(13) + Chr(10)
       cTexto += "<n>Vend. " + aCabPed[nX][13] + "</n>" + Chr(13) + Chr(10)
