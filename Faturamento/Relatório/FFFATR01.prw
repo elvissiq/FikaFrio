@@ -92,9 +92,9 @@ Static Function ImprPV()
 
  // -- Impressão dos itens
  // ----------------------
-  cQry := "Select SC9.C9_CLIENTE, SC9.C9_LOJA, SC9.C9_ITEM, SC9.C9_PRODUTO, SC9.C9_QTDLIB, SC9.C9_PRCVEN,"
+  cQry := "Select SC9.C9_PEDIDO, SC9.C9_CLIENTE, SC9.C9_LOJA, SC9.C9_ITEM, SC9.C9_PRODUTO, SC9.C9_QTDLIB, SC9.C9_PRCVEN,"
   cQry += "       SC9.C9_LOTECTL, SC5.C5_CONDPAG, SC5.C5_EMISSAO, SC5.C5_COMENT, SC5.C5_TIPO, SC5.C5_TIPOCLI,"
-  cQry += "       SA1.A1_NOME, SA1.A1_NREDUZ, SA1.A1_XROTA, SA1.A1_END, SA1.A1_COMPLEM, SA1.A1_BAIRRO, SA1.A1_MUN,"
+  cQry += "       SA1.A1_NOME, SA1.A1_NREDUZ, SA1.A1_XROTA, SA1.A1_END, SA1.A1_XNUMEND, SA1.A1_COMPLEM, SA1.A1_BAIRRO, SA1.A1_MUN,"
   cQry += "       SA1.A1_TEL, SA3.A3_NOME, SE4.E4_DESCRI, SC6.C6_TES, SC6.C6_NFORI, SC6.C6_SERIORI, SC6.C6_VALOR,"
   cQry += "       SC6.C6_VALDESC, SB1.B1_DESC, SB1.B1_GRUPO, SBM.BM_DESC, Z02.Z02_DESCRI"
   cQry += "  from " + RetSQLName("SC9") + " SC9"
@@ -138,7 +138,7 @@ Static Function ImprPV()
   cQry += "  Order by SC9.C9_PEDIDO, SC9.C9_ITEM"
   cQry := ChangeQuery(cQry)
   dbUseArea(.T.,"TopConn",TCGenQry(,,cQry),"QSC9",.F.,.T.)
-
+MemoWrite("C:\temp\TESTE.txt",cQry)
   If QSC9->(Eof())
      ApMsgInfo("Pedido Bloqueado ou Encerrado.")
 
@@ -150,10 +150,11 @@ Static Function ImprPV()
   EndIf 
 
   While ! QSC9->(Eof())
-    If (nPos := aScan(aGrupo,{|x| x[01] == QSC9->B1_GRUPO})) == 0
+    If (nPos := aScan(aGrupo,{|x| x[01] == QSC9->B1_GRUPO .and. x[04] == QSC9->C9_PEDIDO})) == 0
        aAdd(aGrupo, {QSC9->B1_GRUPO,;    // 01 - Código do Grupo
                      QSC9->BM_DESC,;     // 02 - Descrição do Grupo
-                     QSC9->C9_QTDLIB})   // 03 - Quantidade do produto
+                     QSC9->C9_QTDLIB,;   // 03 - Quantidade do produto
+                     QSC9->C9_PEDIDO})   // 04 - Pedido
      else
        aGrupo[nPos][03] += QSC9->C9_QTDLIB
     EndIf
@@ -179,7 +180,8 @@ Static Function ImprPV()
                       0,;                                // 18 - Total do Pedido
                       0,;                                // 19 - Total do Desconto
                       QSC9->C5_TIPO,;                    // 20 - C:Cliente , F:Fornecedor
-                      QSC9->C5_TIPOCLI})                 // 21 - Tipo do Cliente/Fornecedor
+                      QSC9->C5_TIPOCLI,;                 // 21 - Tipo do Cliente/Fornecedor
+                      AllTrim(QSC9->A1_XNUMEND)})        // 22 - Número do endereço
 
        nPos := Len(aCabPed) 
     EndIf
@@ -261,7 +263,7 @@ Static Function ImprPV()
       cTexto += "<n>" + aCabPed[nX][11] + "</n>" + Chr(13) + Chr(10)
       cTexto += "<n>" + aCabPed[nX][02] + "/" + aCabPed[nX][03] + " " + SubStr(aCabPed[nX][04],1,34) + "</n>" + Chr(13) + Chr(10)
       cTexto += "<n>Fantasia " + aCabPed[nX][05] + "</n>" + Chr(13) + Chr(10)
-      cTexto += "<n>" + aCabPed[nX][08] + "</n>" + Chr(13) + Chr(10)
+      cTexto += "<n>" + aCabPed[nX][08] + IIf(Empty(aCabPed[nX][22]),"",", " + aCabPed[nX][22]) + "</n>" + Chr(13) + Chr(10)
       cTexto += "<n>Fone " + Transform(aCabPed[nX][12],"@R 9999-9999") + "</n>" + Chr(13) + Chr(10)
       cTexto += "<n>P. Ref. " + aCabPed[nX][09] + "</n>" + Chr(13) + Chr(10)
       cTexto += "<n>Vend. " + aCabPed[nX][13] + "</n>" + Chr(13) + Chr(10)
@@ -312,8 +314,10 @@ Static Function ImprPV()
       cTexto += "<ce>" + "RESUMO:" + "</ce>" + Chr(13) + Chr(10)
 
       For nPos := 1 To Len(aGrupo)
-          cTexto += "<n>" + Space(3) + PadR(aGrupo[nPos][02],30) + Space(3) +;
-                    Transform(aGrupo[nPos][03],"@E 99,999.99") + "</n>" + Chr(13) + Chr(10)
+          If aCabPed[nX][01] == aGrupo[nPos][04] 
+             cTexto += "<n>" + Space(3) + PadR(aGrupo[nPos][02],30) + Space(3) +;
+                       Transform(aGrupo[nPos][03],"@E 99,999.99") + "</n>" + Chr(13) + Chr(10)
+          EndIf
       Next
 
       cTexto += "<n>" + Replicate("-", nMaxChar) + "</n>" + Chr(13) + Chr(10)
@@ -439,6 +443,8 @@ Static Function CriaPerg(cPerg)
   Local nX    := 0 
   Local nY    := 0
   Local aRegs := {}
+
+  cPerg := PadR(cPerg,10)
 
   dbSelectArea("SX1")
   SX1->(dbSetOrder(1))
