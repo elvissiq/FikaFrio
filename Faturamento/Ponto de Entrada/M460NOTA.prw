@@ -40,6 +40,7 @@ User function M460NOTA()
             cQuery += "     AND DAK.D_E_L_E_T_ <> '*'"
             cQuery += "     AND SE1.D_E_L_E_T_ <> '*'"
             cQuery += "     AND SF2.F2_FILIAL  = '" + xFilial("SF2") + "'"
+            cQuery += "     AND SF2.F2_SERIE   <> '999'"
             cQuery += "     AND DAK.DAK_FILIAL = '" + xFilial("DAK") + "'"
             cQuery += "     AND SE1.E1_FILIAL  = '" + xFilial("SE1") + "'"
             cQuery += "     AND DAK.DAK_OK     = '" + oMark:cMark + "'"
@@ -53,6 +54,7 @@ User function M460NOTA()
             cQuery += "     AND SE1.D_E_L_E_T_ <> '*'"
             cQuery += "     AND SC9.C9_FILIAL  = '" + xFilial("SC9") + "'"
             cQuery += "     AND SF2.F2_FILIAL  = '" + xFilial("SF2") + "'"
+            cQuery += "     AND SF2.F2_SERIE   <> '999'"
             cQuery += "     AND SE1.E1_FILIAL  = '" + xFilial("SE1") + "'"
             cQuery += "     AND SC9.C9_OK   = '" + oMark:cMark + "'"
     EndCase 
@@ -116,7 +118,9 @@ User function M460NOTA()
 	//Monta borderô automaticamente
 	If lGeraBol .AND. !Empty(aTitM460)
         For nY := 1 To Len(aTitM460)
-            fnGerBor(nY) //Gera o borderô
+            If !Empty(aTitM460[nY][01])
+                fnGerBor(nY) //Gera o borderô
+            EndIF 
         Next
     EndIF 
 	//-----------------------------------------------------------------------------------------------------------
