@@ -14,6 +14,7 @@
 User Function FFFATM01()
   Local oFusion := PCLSFUSION():New()
   Local aRet    := {}
+  Local cQry    := ""
   Local cStatus := ""
   Local cFCarga := ""
   Local cSeqFus := ""
@@ -30,8 +31,24 @@ User Function FFFATM01()
                    "Verifique o cadastro 'Complemento de Produto'.","ATENÇÃO")
         Return
      EndIf 
+ 
+    // -- Pegar último sequêncial do FUSION
+    // ------------------------------------
+     cQry := "Select Max(SC9.C9_XSEQFUS) as ULTSEQ from " + RetSqlName("SC9") + " SC9"
+     cQry += "  where SC9.D_E_L_E_T_ <> '*'"
+     cQry += "    and SC9.C9_FILIAL  = '" + FWxFilial("SC9") + "'"
+     cQry += "    and SC9.C9_PEDIDO  = '" + SC5->C5_NUM + "'"
+     cQry := ChangeQuery(cQry)
+     dbUseArea(.T.,"TopConn",TCGenQry(,,cQry),"QSC9",.F.,.T.) 
+
+     If ! QSC9->(Eof())
+        cSeqFus := QSC9->ULTSEQ
+     EndIf
+
+     QSC9->(dbCloseArea())
+    // ------------------------------------
      
-     aRet := oFusion:LerPedidoVenda(SC5->C5_NUM,Val(cSeqFus),.F.,"","","","")
+     aRet := oFusion:LerPedidoVenda(SC5->C5_NUM,IIf(Empty(cSeqFus),0,Val(cSeqFus)),.F.,"","","","")
 
      If aRet[01]
         oFusion:aRegistro := IIf(Len(aRet[04]) > 0,aRet[04],aRet[03])                    // Registro do Pedido de Venda

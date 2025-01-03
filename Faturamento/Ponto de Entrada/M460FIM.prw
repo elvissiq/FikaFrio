@@ -46,7 +46,7 @@ User Function M460FIM()
   cQry += "     and SC9.C9_SERIENF = '" + cSerieNFS + "'"
   cQry := ChangeQuery(cQry) 
   dbUseArea(.T.,"TOPCONN",TCGenQry(,,cQry),"TSD2",.F.,.T.)
-Memowrite("C:\Temp\M460.txt",cQry)  
+ 
   If ! TSD2->(Eof())
      aRet := oFusion:lerPedidoVenda(TSD2->D2_PEDIDO, Val(TSD2->C9_XSEQFUS), .F., SF2->F2_DOC, SF2->F2_SERIE,"","")
 
