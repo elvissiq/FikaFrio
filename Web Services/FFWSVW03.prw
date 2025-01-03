@@ -333,54 +333,58 @@ Static Function fnGrvReg(oJson, cJSon, cMensag)
                    EndIf 
                Next   
 
-               For nY := 1 To Len(aItens)
-                   aAux := {}
+               If Empty(cCliente) .or. Empty(cLoja)
+                  cLog := "Requisição com problema, falta informar a tag 'C5_CLIENTE' ou 'C5_LOJACLI'."
+                else
+                  For nY := 1 To Len(aItens)
+                      aAux := {}
 
-                   For nK := 1 To Len(aItens[nY]) 
-                       aAdd(aAux, {aItens[nY][nK][01], aItens[nY][nK][02], Nil})
+                      For nK := 1 To Len(aItens[nY]) 
+                          aAdd(aAux, {aItens[nY][nK][01], aItens[nY][nK][02], Nil})
 
-                       If aItens[nY][nK][01] == "C6_PRODUTO"
-                          cProduto := aItens[nY][nK][02]
+                          If aItens[nY][nK][01] == "C6_PRODUTO"
+                             cProduto := aItens[nY][nK][02]
 
-                        elseIf aItens[nY][nK][01] == "C6_OPER"
-                               cOper := AllTrim(aItens[nY][nK][02]) 
-                       EndIf    
-                   Next
+                           elseIf aItens[nY][nK][01] == "C6_OPER"
+                                  cOper := AllTrim(aItens[nY][nK][02]) 
+                          EndIf    
+                      Next
          
-                  // -- Achar a TES
-                  // --------------
-                   cTES := MaTESInt(2,cOper,cCliente,cLoja,"C",cProduto,"C6_TES")
+                     // -- Achar a TES
+                     // --------------
+                      cTES := MaTESInt(2,cOper,cCliente,cLoja,"C",cProduto,"C6_TES")
 
-                   aAdd(aAux, {"C6_TES", cTES, Nil})
-                  // -------------- 
+                      aAdd(aAux, {"C6_TES", cTES, Nil})
+                     // -------------- 
 
-                   aAdd(aRegSC6, aAux)
-               Next
+                      aAdd(aRegSC6, aAux)
+                  Next
+               
+                  Begin Transaction
+                    MsExecAuto({|x,y,Z| MATA410(x,y,z)}, aRegSC5, aRegSC6, nOpcao)
 
-               Begin Transaction
-                 MsExecAuto({|x,y,Z| MATA410(x,y,z)}, aRegSC5, aRegSC6, nOpcao)
+                    If lMsErroAuto
+			                 aAux := GetAutoGRLog()
 
-                 If lMsErroAuto
-			              aAux := GetAutoGRLog()
+			                 For nY := 1 To Len(aAux)
+				                   cAux := AllTrim(aAux[nY])
+				                   cLog += cAux
+			                 Next
 
-			              For nY := 1 To Len(aAux)
-				                cAux := AllTrim(aAux[nY])
-				                cLog += cAux
-			              Next
+                       For nY := 1 To Len(cLog)
+	                         cChar := SubStr(cLog,nY,1)
 
-                    For nY := 1 To Len(cLog)
-	                      cChar := SubStr(cLog,nY,1)
-
-                        If (Asc(cChar) < 32 .Or. Asc(cChar) > 123) .and. !cChar $ "|"
-		                       cLog := StrTran(cLog,cChar," ")
-	                      EndIf
-                    Next 
+                           If (Asc(cChar) < 32 .Or. Asc(cChar) > 123) .and. !cChar $ "|"
+		                          cLog := StrTran(cLog,cChar," ")
+	                         EndIf
+                       Next 
                     
-                    DisarmTransaction()
-                  else
-                    ConfirmSX8()  
-                 EndIf
-			         End Transaction
+                       DisarmTransaction()
+                     else
+                       ConfirmSX8()  
+                    EndIf
+			            End Transaction
+               EndIf
             EndIf  
          EndIf
 

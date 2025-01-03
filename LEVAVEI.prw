@@ -15,6 +15,7 @@
 User Function LEVAVEI()
 Local oFusion := PCLSFUSION():New()
   Local aRet    := {}
+ 
 dbSelectArea("DA4")
 DA4->(dbSetOrder(1))
 
@@ -25,7 +26,7 @@ While ! DA4->(Eof())
 
   DA4->(dbSkip())
 EndDo
-
+/*
 dbSelectArea("DAU")
 DAU->(dbSetOrder(1))
 
@@ -37,7 +38,6 @@ While ! DAU->(Eof())
   DAU->(dbSkip())
 EndDo
 
-/*
 dbSelectArea("DA3")
 DA3->(dbSetOrder(1))
 
@@ -48,7 +48,21 @@ While ! DA3->(Eof())
 
   DA3->(dbSkip())
 EndDo 
-*/ 
-     ApMsgInfo("Dados do Veículo enviado para FUSION com sucesso.")
+*/
+     ApMsgInfo("Dados do Motorista/Ajudante/Veículo enviado para FUSION com sucesso.")
+/*
+dbSelectArea("SA1")
+SA1->(dbSetOrder(1))
 
+While ! SA1->(Eof())
+  oFusion:sendClientes(SA1->A1_COD, SA1->A1_LOJA)    // Montar requisição de envio
+
+  aRet := oFusion:Enviar("sendClientes")             // Enviar para FUSION
+
+  SA1->(dbSkip())
+EndDo
+
+
+ApMsgInfo("Dados do Clientes enviado para FUSION com sucesso.")
+*/
 Return

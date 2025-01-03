@@ -20,8 +20,8 @@ User Function OM200US()
 
   If nPos > 0
      If ValType(aRotina[nPos][02]) == "A"
-        aAdd(aRotina[nPos][02],{"Importar FUSION","U_FFOMSM02()",0,1,0,NIL})   
-        aAdd(aRotina[nPos][02],{"Log Integração" ,"U_FFOMSC01()",0,1,0,NIL})   
+        aAdd(aRotina[nPos][02],{"Importar FUSION","U_FFOMSM02()",0,3,0,Nil})   
+        aAdd(aRotina[nPos][02],{"Log Integração" ,"U_FFOMSC01()",0,3,0,Nil})   
      EndIf
   EndIf
 Return aRotina

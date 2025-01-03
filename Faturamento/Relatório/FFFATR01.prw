@@ -127,7 +127,7 @@ Static Function ImprPV()
   cQry += "   where SC9.D_E_L_E_T_ <> '*'"
   cQry += "     and SC9.C9_FILIAL = '" + FWxFilial("SC9") + "'"
   cQry += "     and SC9.C9_PEDIDO between '" + mv_par01 + "' and '" + mv_par02 + "'"
-  cQry += "     and SC9.C9_BLEST  = ''"
+  cQry += "     and (SC9.C9_BLEST  = '' or SC9.C9_BLEST = '10')"
   cQry += "     and SC6.D_E_L_E_T_ <> '*'"
   cQry += "     and SC6.C6_FILIAL = '" + FWxFilial("SC6") + "'"
   cQry += "     and SC6.C6_NUM    = SC9.C9_PEDIDO"
@@ -138,7 +138,7 @@ Static Function ImprPV()
   cQry += "  Order by SC9.C9_PEDIDO, SC9.C9_ITEM"
   cQry := ChangeQuery(cQry)
   dbUseArea(.T.,"TopConn",TCGenQry(,,cQry),"QSC9",.F.,.T.)
-MemoWrite("C:\temp\TESTE.txt",cQry)
+
   If QSC9->(Eof())
      ApMsgInfo("Pedido Bloqueado ou Encerrado.")
 
@@ -326,43 +326,48 @@ MemoWrite("C:\temp\TESTE.txt",cQry)
 
      // -- Impressão dos títulos abertos
      // --------------------------------
-      cQry := "Select SE1.E1_EMISSAO, SE1.E1_VENCREA, SE1.E1_PREFIXO, SE1.E1_NUM,"
-      cQry += "       SE1.E1_PARCELA, SE1.E1_TIPO, SE1.E1_SALDO"
-      cQry += "  from " + RetSqlName("SE1") + " SE1"
-      cQry += "   where SE1.D_E_L_E_T_ <> '*'"
-      cQry += "     and SE1.E1_FILIAL  = '" + FWxFilial("SE1") + "'"
-      cQry += "     and SE1.E1_CLIENTE = '" + aCabPed[nX][02] + "'"
-      cQry += "     and SE1.E1_LOJA    = '" + aCabPed[nX][03] + "'"
-      cQry += "     and SE1.E1_SALDO > 0"
-      cQry := ChangeQuery(cQry)
-      dbUseArea(.T.,"TopConn",TCGenQry(,,cQry),"QSE1",.F.,.T.)
+      If aCabPed[nX][02] <> "000001"
+         cQry := "Select SE1.E1_EMISSAO, SE1.E1_VENCREA, SE1.E1_PREFIXO, SE1.E1_NUM,"
+         cQry += "       SE1.E1_PARCELA, SE1.E1_TIPO, SE1.E1_SALDO"
+         cQry += "  from " + RetSqlName("SE1") + " SE1"
+         cQry += "   where SE1.D_E_L_E_T_ <> '*'"
+         cQry += "     and SE1.E1_FILIAL  = '" + FWxFilial("SE1") + "'"
+         cQry += "     and SE1.E1_CLIENTE = '" + aCabPed[nX][02] + "'"
+         cQry += "     and SE1.E1_LOJA    = '" + aCabPed[nX][03] + "'"
+         cQry += "     and SE1.E1_VENCREA <= '" + DToS(dDataBase) + "'"
+         cQry += "     and SE1.E1_SALDO > 0"
+         cQry := ChangeQuery(cQry)
+         dbUseArea(.T.,"TopConn",TCGenQry(,,cQry),"QSE1",.F.,.T.)
 
-      If ! QSE1->(Eof())
-         cTexto += "<ce>" + "===>> TÍTULOS EM ABERTO <<===" + "</ce>" + Chr(13) + Chr(10)
-         cTexto += "<n>" + Replicate("-", nMaxChar) + "</n>" + Chr(13) + Chr(10)
-         cTexto += "<c>EMISSAO" + Space(5) + "Vencimento" + Space(3) + "TÍTULO" + Space(7) + "TP.COB." +;
-                   Space(4) + "VALOR" + "</c>" + Chr(13) + Chr(10)
-         cTexto += "<n>" + Replicate("-", nMaxChar) + "</n>" + Chr(13) + Chr(10)
+         If ! QSE1->(Eof())
+            cTexto += "<ce>" + "===>> TÍTULOS EM ABERTO <<===" + "</ce>" + Chr(13) + Chr(10)
+            cTexto += "<n>" + Replicate("-", nMaxChar) + "</n>" + Chr(13) + Chr(10)
+            cTexto += "<c>EMISSAO" + Space(5) + "Vencimento" + Space(3) + "TÍTULO" + Space(7) + "TP.COB." +;
+                      Space(4) + "VALOR" + "</c>" + Chr(13) + Chr(10)
+            cTexto += "<n>" + Replicate("-", nMaxChar) + "</n>" + Chr(13) + Chr(10)
 
-         While ! QSE1->(Eof())  
-           cTexto += "<c>" + DToC(SToD(QSE1->E1_EMISSAO)) + Space(02) + DToC(SToD(QSE1->E1_VENCREA)) + Space(02) +;
-                     AllTrim(QSE1->E1_PREFIXO) + "-" + AllTrim(QSE1->E1_NUM) + "/" + AllTrim(QSE1->E1_PARCELA) +;
-                     Space(02) + IIf(AllTrim(QSE1->E1_TIPO) == "BOL","Boleto",IIf(AllTrim(QSE1->E1_TIPO) == "NF","N.Fiscal","")) +;
-                     Space(02) + Transform(QSE1->E1_SALDO,"@E 99,999.99") + "</c>" + Chr(13) + Chr(10)
+            While ! QSE1->(Eof())  
+              cTexto += "<c>" + DToC(SToD(QSE1->E1_EMISSAO)) + Space(02) + DToC(SToD(QSE1->E1_VENCREA)) + Space(02) +;
+                        AllTrim(QSE1->E1_PREFIXO) + "-" + AllTrim(QSE1->E1_NUM) + "/" + AllTrim(QSE1->E1_PARCELA) +;
+                        Space(02) + IIf(AllTrim(QSE1->E1_TIPO) == "BOL","Boleto",IIf(AllTrim(QSE1->E1_TIPO) == "NF","N.Fiscal","")) +;
+                        Space(02) + Transform(QSE1->E1_SALDO,"@E 99,999.99") + "</c>" + Chr(13) + Chr(10)
      
-           nTtFin += QSE1->E1_SALDO
+              nTtFin += QSE1->E1_SALDO
 
-           QSE1->(dbSkip())
-         EndDo
+              QSE1->(dbSkip())
+            EndDo
 
-         cTexto += "<n>" + Replicate("-", nMaxChar) + "</n>" + Chr(13) + Chr(10)
-         cTexto += "<n>" + Space(15) + "TOTAL EM ABERTO ===>>" + Space(03) + Transform(nTtFin,"@E 99,999.99") + "</n>" + Chr(13) + Chr(10)
+            cTexto += "<n>" + Replicate("-", nMaxChar) + "</n>" + Chr(13) + Chr(10)
+            cTexto += "<n>" + Space(15) + "TOTAL EM ABERTO ===>>" + Space(03) + Transform(nTtFin,"@E 99,999.99") + "</n>" + Chr(13) + Chr(10)
+         EndIf
+
+         QSE1->(dbCloseArea()) 
       EndIf
-
-      QSE1->(dbCloseArea()) 
 
       STWManagReportPrint(cTexto,1)
   Next
+
+  INFFechar()
 
   FWRestArea(aArea)
 Return
