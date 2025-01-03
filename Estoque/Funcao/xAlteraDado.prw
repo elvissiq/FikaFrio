@@ -11,7 +11,7 @@
   @version 1.0
   /*/
 
-User Function xAlteraDado2()
+User Function xAlteraDado()
 Local oDialog, oPanel, oTSay, oCombo, oDlg
 Local aTabelas := {"SB1 - Produtos","SA1 - Clientes","SA2 - Fornecedores","SB5 - Complemento do Produto"}
 
