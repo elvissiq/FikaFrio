@@ -75,39 +75,36 @@ User function M460NOTA()
                 cAgenc  := PadR(SA1->A1_XAGENCI,FWTamSX3("A6_AGENCIA")[1])
                 cContCC := PadR(SA1->A1_XNUMCON,FWTamSX3("A6_NUMCON")[1])
                 cSubCC  := PadR(SA1->A1_XSUBCTA,FWTamSX3("EA_SUBCTA")[1])
-            Else
-               (_cAlias)->(DBSkip()) 
+            
+                IF SA6->(MSSeek(xFilial("SA6") + cBank + cAgenc + cContCC ))
+                    If AllTrim(SA6->A6_CFGAPI) == '1'
+                        
+                        nPosBk := AScan(aTitM460, {|x| AllTrim(x[1]) == cBank+";"+cAgenc+";"+cContCC+";"+cSubCC  })
+                        
+                        If Empty(nPosBk)
+                            aAdd(aTitM460,{ cBank+";"+cAgenc+";"+cContCC+";"+cSubCC })
+                            aTitAux := {}
+                            aAdd(aTitAux ,{ {"E1_FILIAL" , (_cAlias)->E1_FILIAL},;
+                                            {"E1_PREFIXO", (_cAlias)->E1_PREFIXO},;
+                                            {"E1_NUM"    , (_cAlias)->E1_NUM},;
+                                            {"E1_PARCELA", (_cAlias)->E1_PARCELA},;
+                                            {"E1_TIPO"   , (_cAlias)->E1_TIPO} })
+                            aAdd(aTitM460[Len(aTitM460)], aTitAux)
+                        Else
+                            aTitAux := {}
+                            aAdd(aTitAux ,{ {"E1_FILIAL" , (_cAlias)->E1_FILIAL},;
+                                            {"E1_PREFIXO", (_cAlias)->E1_PREFIXO},;
+                                            {"E1_NUM"    , (_cAlias)->E1_NUM},;
+                                            {"E1_PARCELA", (_cAlias)->E1_PARCELA},;
+                                            {"E1_TIPO"   , (_cAlias)->E1_TIPO} })
+                            aAdd(aTitM460[nPosBk], aTitAux)
+                        EndIF
+                    EndIF 
+                EndIF
             EndIF 
         EndIF
-
-        IF SA6->(MSSeek(xFilial("SA6") + cBank + cAgenc + cContCC ))
-            If AllTrim(SA6->A6_CFGAPI) <> '1'
-                (_cAlias)->(DBSkip())
-            EndIF 
-        EndIF 
         
-        nPosBk := AScan(aTitM460, {|x| AllTrim(x[1]) == cBank+";"+cAgenc+";"+cContCC+";"+cSubCC  })
-
-        If Empty(nPosBk)
-            aAdd(aTitM460,{ cBank+";"+cAgenc+";"+cContCC+";"+cSubCC })
-            aTitAux := {}
-            aAdd(aTitAux ,{ {"E1_FILIAL" , (_cAlias)->E1_FILIAL},;
-                            {"E1_PREFIXO", (_cAlias)->E1_PREFIXO},;
-                            {"E1_NUM"    , (_cAlias)->E1_NUM},;
-                            {"E1_PARCELA", (_cAlias)->E1_PARCELA},;
-                            {"E1_TIPO"   , (_cAlias)->E1_TIPO} })
-            aAdd(aTitM460[Len(aTitM460)], aTitAux)
-        Else
-            aTitAux := {}
-            aAdd(aTitAux ,{ {"E1_FILIAL" , (_cAlias)->E1_FILIAL},;
-                            {"E1_PREFIXO", (_cAlias)->E1_PREFIXO},;
-                            {"E1_NUM"    , (_cAlias)->E1_NUM},;
-                            {"E1_PARCELA", (_cAlias)->E1_PARCELA},;
-                            {"E1_TIPO"   , (_cAlias)->E1_TIPO} })
-            aAdd(aTitM460[nPosBk], aTitAux)
-        EndIF 
-
-        (_cAlias)->(DBSkip())
+        (_cAlias)->(DBSkip()) 
     End
     
     If Select(_cAlias) > 0
