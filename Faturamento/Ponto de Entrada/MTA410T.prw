@@ -61,7 +61,7 @@ User Function MTA410T()
                      SC9->(MsUnlock())
                  Next
 
-                 ApMsgInfo("Pedido enviado para FUSION com sucesso.")
+                 ApMsgInfo("Pedido enviado para FUSION com sucesso.","MTA410T")
                else
                  ApMsgAlert(aRetEnv[02],"ATENÇÃO")  
               EndIf

@@ -6,14 +6,13 @@
 /*/ Rotina OMSA200
   Ponto de entrada OS200EST
 
-   Após alteração da carga. Botão "Editar",
-   alterar quantidade.
+   Tratativa ao estornar a carga.
     
    Implementado para:
-     - Enviar Alteração de Carga para o FUSION.
+     - Enviar cancelamento de Carga para o FUSION.
 
   @author Anderson Almeida - TOTVS
-  @since   28/08/2024 
+  @since   06/01/2024 
 /*/
 //--------------------------------------------------------
 User Function OS200EST()
@@ -36,7 +35,7 @@ User Function OS200EST()
   cQry += "     and SC5.C5_TPCARGA = '1'"
   cQry := ChangeQuery(cQry)
   dbUseArea(.T.,"TOPCONN",TCGenQRY(,,cQry),"TSC9",.F.,.T.)
-
+MemoWrite("C:\temp\est.txt",cQry)
   While ! TSC9->(Eof())
     aRet := oFusion:lerPedidoVenda(TSC9->C9_PEDIDO,Val(TSC9->C9_XSEQFUS),.F.,"","",cCarga,cSeqCar)
 
@@ -54,7 +53,7 @@ User Function OS200EST()
       //             lCarga  - .T. = Número da carga
       //                       .F. = Sem número da carga 
       // --------------------------------------------------------------------
-       oFusion:saveEntregaServico("1","S",.F.,"","")
+       oFusion:saveEntregaServico("1","N",.F.,"","")
 
        aRet := oFusion:Enviar("saveEntregaServico") // Enviar para FUSION
 

@@ -316,8 +316,8 @@ Static Function fnGrvReg(oJson, cJSon, cMensag)
                      QSC9->(dbCloseArea())
                   EndIf
                EndIf
-             else
-               aAdd(aRegSC5, {"C5_NUM", GetSX8Num("SC5","C5_NUM"), Nil})  
+//             else
+//               aAdd(aRegSC5, {"C5_NUM", GetSX8Num("SC5","C5_NUM"), Nil})  
             EndIf      
            // ----------------------
 
@@ -380,8 +380,8 @@ Static Function fnGrvReg(oJson, cJSon, cMensag)
                        Next 
                     
                        DisarmTransaction()
-                     else
-                       ConfirmSX8()  
+//                     else
+//                       ConfirmSX8()  
                     EndIf
 			            End Transaction
                EndIf

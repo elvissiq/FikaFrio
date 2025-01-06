@@ -20,10 +20,15 @@
 /*/
 //----------------------------------------------------------
 User Function M460FIM()
-  Local cNumNFS   := ParamIXB[1]       // Número da NF
-  Local cSerieNFS := ParamIXB[2]       // Série da NF
-  Local cClieFor  := ParamIXB[3]       // Cliente/fornecedor da NF
-  Local cLoja     := ParamIXB[4]       // Loja da NF
+//  Local cNumNFS   := ParamIXB[1]       // Número da NF
+//  Local cSerieNFS := ParamIXB[2]       // Série da NF
+//  Local cClieFor  := ParamIXB[3]       // Cliente/fornecedor da NF
+//  Local cLoja     := ParamIXB[4]       // Loja da NF
+  Local cNumNFS   := SF2->F2_DOC       // Número da NF
+  Local cSerieNFS := SF2->F2_SERIE     // Série da NF
+  Local cClieFor  := SF2->F2_CLIENTE   // Cliente/fornecedor da NF
+  Local cLoja     := SF2->F2_LOJA      // Loja da NF
+
   Local oFusion   := PCLSFUSION():New()
   Local aRet      := {}
   Local cQry      := ""
@@ -54,8 +59,8 @@ User Function M460FIM()
         If Len(aRet[04]) > 0                                   // Itens do Pedido de Venda Liberada
            oFusion:aRegistro := aRet[04] 
 
-           oFusion:saveEntregaServico("4","N",.T.)             // 1 - Normal, B - Bloqueado ou C - Cancelado e Forma Carga
-           
+           oFusion:saveEntregaServico("4","N",.T.,SF2->F2_DOC,SF2->F2_SERIE)     // 1 - Normal, B - Bloqueado ou C - Cancelado e Forma Carga
+          
            aRet := oFusion:Enviar("saveEntregaServico")        // Enviar para FUSION
 
            If ! aRet[01]
