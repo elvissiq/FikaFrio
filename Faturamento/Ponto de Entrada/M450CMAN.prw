@@ -75,7 +75,7 @@ User Function M450CMAN()
                           SC9->(MsUnlock())
                       Next
 
-                      ApMsgInfo("Pedido enviado para FUSION com sucesso.")
+                      ApMsgInfo("Pedido enviado para FUSION com sucesso.","M450CMAN")
                     else
                       ApMsgAlert(aRetEnv[02],"ATENÇÃO")  
                    EndIf

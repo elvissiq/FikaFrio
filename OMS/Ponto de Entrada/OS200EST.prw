@@ -6,14 +6,13 @@
 /*/ Rotina OMSA200
   Ponto de entrada OS200EST
 
-   Após alteração da carga. Botão "Editar",
-   alterar quantidade.
+   Tratativa ao estornar a carga.
     
    Implementado para:
-     - Enviar Alteração de Carga para o FUSION.
+     - Enviar cancelamento de Carga para o FUSION.
 
   @author Anderson Almeida - TOTVS
-  @since   28/08/2024 
+  @since   06/01/2024 
 /*/
 //--------------------------------------------------------
 User Function OS200EST()
@@ -45,14 +44,16 @@ User Function OS200EST()
      else
        oFusion:aRegistro := aRet[04]                      // Registro do Pedido de Venda
           
-      //@Parâmetro:  pStatus - '1' = Aprovado
-      //                       'B' = Bloqueio Financeiro
-      //                       'C' = Bloqueio Comercial
-      //                       '9' = Cancelado
-      //             pForma  - 'S' = Sim forma carga
-      //                       'N' = Não forma carga 
-      //             lCarga  - .T. = Número da carga
-      //                       .F. = Sem número da carga 
+      //@Parâmetro:  01 - '1' = Aprovado
+      //                  'B' = Bloqueio Financeiro
+      //                  'C' = Bloqueio Comercial
+      //                  '9' = Cancelado
+      //             02 - 'S' = Sim forma carga
+      //                  'N' = Não forma carga 
+      //             03 - .T. = Número da carga
+      //                  .F. = Sem número da carga 
+      //             04 - Número da Nota Fiscal
+      //             05 - Série da Nota Fiscal
       // --------------------------------------------------------------------
        oFusion:saveEntregaServico("1","S",.F.,"","")
 
