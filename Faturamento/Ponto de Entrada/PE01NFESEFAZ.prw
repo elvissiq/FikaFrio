@@ -75,9 +75,18 @@ User Function PE01NFESEFAZ()
         //@ Bloco responsável por acrescenta o Número do LOTE. ///// INICIO /////
         For _nI := 1  to Len(aProd)
             
-            nVolume += aProd[_nI,9] //Soma a quantidade dos produtos
-            
             SD2->(MsSeek(xFilial("SD2")+aNota[2]+aNota[1]+aNota[7]+aNota[8]+aProd[_nI][2]+STrZero(aProd[_nI][1],2))) //D2_FILIAL+D2_DOC+D2_SERIE+D2_CLIENTE+D2_LOJA+D2_COD+D2_ITEM
+            
+            If !Empty(SD2->D2_QTSEGUM) //Segunda Unidade de Medida
+                aProd[_nI][9]  := SD2->D2_QTSEGUM
+                aProd[_nI][12] := SD2->D2_QTSEGUM
+                If !Empty(SD2->D2_SEGUM)
+                    aProd[_nI][8]  := SD2->D2_SEGUM
+                    aProd[_nI][11] := SD2->D2_SEGUM
+                EndIF
+            EndIF 
+
+            nVolume += aProd[_nI,9] //Soma a quantidade dos produtos 
 
             If !Empty(SD2->D2_PEDIDO)
                 DBSelectArea("SC6")
