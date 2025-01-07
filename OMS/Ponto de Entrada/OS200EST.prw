@@ -35,7 +35,7 @@ User Function OS200EST()
   cQry += "     and SC5.C5_TPCARGA = '1'"
   cQry := ChangeQuery(cQry)
   dbUseArea(.T.,"TOPCONN",TCGenQRY(,,cQry),"TSC9",.F.,.T.)
-MemoWrite("C:\temp\est.txt",cQry)
+
   While ! TSC9->(Eof())
     aRet := oFusion:lerPedidoVenda(TSC9->C9_PEDIDO,Val(TSC9->C9_XSEQFUS),.F.,"","",cCarga,cSeqCar)
 
@@ -44,16 +44,18 @@ MemoWrite("C:\temp\est.txt",cQry)
      else
        oFusion:aRegistro := aRet[04]                      // Registro do Pedido de Venda
           
-      //@Parâmetro:  pStatus - '1' = Aprovado
-      //                       'B' = Bloqueio Financeiro
-      //                       'C' = Bloqueio Comercial
-      //                       '9' = Cancelado
-      //             pForma  - 'S' = Sim forma carga
-      //                       'N' = Não forma carga 
-      //             lCarga  - .T. = Número da carga
-      //                       .F. = Sem número da carga 
+      //@Parâmetro:  01 - '1' = Aprovado
+      //                  'B' = Bloqueio Financeiro
+      //                  'C' = Bloqueio Comercial
+      //                  '9' = Cancelado
+      //             02 - 'S' = Sim forma carga
+      //                  'N' = Não forma carga 
+      //             03 - .T. = Número da carga
+      //                  .F. = Sem número da carga 
+      //             04 - Número da Nota Fiscal
+      //             05 - Série da Nota Fiscal
       // --------------------------------------------------------------------
-       oFusion:saveEntregaServico("1","N",.F.,"","")
+       oFusion:saveEntregaServico("1","S",.F.,"","")
 
        aRet := oFusion:Enviar("saveEntregaServico") // Enviar para FUSION
 

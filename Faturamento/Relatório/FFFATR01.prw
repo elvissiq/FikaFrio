@@ -40,6 +40,7 @@ Static Function ImprPV()
   Local nX        := 0
   Local nY        := 0
   Local nPos      := 0
+  Local nTtItem   := 0
   Local nTtIPI    := 0
   Local nTtICMSST := 0
   Local nTtFECST  := 0
@@ -186,21 +187,22 @@ Static Function ImprPV()
        nPos := Len(aCabPed) 
     EndIf
 
+    nTtItem := (QSC9->C9_PRCVEN * QSC9->C9_QTDLIB) - QSC9->C6_VALDESC
+
     aAdd(aItePed, {QSC9->C9_PEDIDO,;        // 01 - Pedido
                    QSC9->C9_ITEM,;          // 02 - Item
                    AllTrim(QSC9->B1_DESC),; // 03 - Descrição do Produto
                    QSC9->C9_QTDLIB,;        // 04 - Quantidade do Produto
                    QSC9->C9_PRCVEN,;        // 05 - Preço de venda
                    QSC9->C6_VALDESC,;       // 06 - Valor do desconto
-                   QSC9->C6_VALOR,;         // 07 - Valor total do item
+                   nTtItem,;                // 07 - Valor total do item
                    QSC9->C9_LOTECTL,;       // 08 - Número do lote 
                    QSC9->C9_PRODUTO,;       // 09 - Produto
                    QSC9->C6_TES,;           // 10 - TES
                    QSC9->C6_NFORI,;         // 11 - Nota Fiscal origem
-                   QSC9->C6_SERIORI,;       // 12 - Serie da Nota Fiscal de origem
-                   QSC9->C6_VALOR})         // 13 - Valor total do item  
+                   QSC9->C6_SERIORI})       // 12 - Serie da Nota Fiscal de origem
 
-    aCabPed[nPos][18] += QSC9->C6_VALOR
+    aCabPed[nPos][18] += nTtItem
     aCabPed[nPos][19] += QSC9->C6_VALDESC
 
     QSC9->(dbSkip())
@@ -239,7 +241,7 @@ Static Function ImprPV()
                            aItePed[nY][06],;        // 05 - Valor de desconto
                            aItePed[nY][11],;        // 06 - Nota Fiscal origem
                            aItePed[nY][12],;        // 07 - Serie da Nota Fiscal de origem
-                           aItePed[nY][13]})        // 08 - Valor total do item
+                           aItePed[nY][07]})        // 08 - Valor total do item
           EndIf
       Next   
       
