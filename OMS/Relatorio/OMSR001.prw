@@ -70,7 +70,7 @@ Private cCombo   := ""
 			oTSay  := TSay():New(40,5,{|| "Carga Ate:"},oPanel,,oFont,,,,.T.,,,110,100,,,,,,.T.)
             @ 038,080 MSGET cCargaAte SIZE 050,020 FONT oFont OF oPanel F3 "DAK" PIXEL
 			oTSay  := TSay():New(70,5,{|| "Conf. Cega?"},oPanel,,oFont,,,,.T.,,,110,100,,,,,,.T.)
-            oCombo := TComboBox():New(095,085,{|u|iif(PCount()>0,cCombo:=u,cCombo)},aCombo,070,040,oDlg,,{||},,,,.T.,oFont,,,,,,,,'cCombo')
+            oCombo := TComboBox():New(095,085,{|u|iif(PCount()>0,cCombo:=u,cCombo)},aCombo,070,040,,,{||},,,,.T.,oFont,,,,,,,,'cCombo')
 	oDialog:Activate()
 
 	If lBtOK .And. !Empty(cCargaAte)
@@ -161,7 +161,7 @@ Private cCombo   := ""
 			If nLin+80 >= 800
 				nLin := 40
 				fnCabec((_cAlias)->C9_CARGA)
-				fnRodape()
+				fnRodape((_cAlias)->C9_CARGA)
 			EndIF
 
 			fnItens() 
