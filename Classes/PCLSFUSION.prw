@@ -1010,7 +1010,7 @@ Method altCarga(pForma,pPedido,pRecno) Class PCLSFUSION
         //                3 - Validar pelo SC5 = .T. ou SC9 = .F.
         //                4 - Excluído = .T. 
         // ------------------------------------------------------
-         aRet := self:lerPedidoVenda(aPedido[nId],Val(SC9->C9_XSEQFUS),.F.,"","",SC9->C9_CARGA,SC9->C9_SEQCARG)
+         aRet := self:lerPedidoVenda(aPedido[nId],Val(SC9->C9_XSEQFUS),.F.,"","",SC9->C9_CARGA,SC9->C9_SEQCAR)
 
          If ! aRet[01]
             ApMsgInfo(aRet[02],"ATENÇÃO - Integração Fusion")
