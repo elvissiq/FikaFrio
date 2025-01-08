@@ -143,7 +143,7 @@ Static Function xProcessa()
           //                3 - Testar bloqueio do Pedido
           //                4 - Registro deletado
           // ---------------------------------------------
-          aRet := oFusion:LerPedidoVenda(SC5->C5_NUM,nSeqFus,cNota,cSerie,cCarga,cSeqCar)
+          aRet := oFusion:LerPedidoVenda(SC5->C5_NUM,nSeqFus,.F.,cNota,cSerie,cCarga,cSeqCar)
           
           If aRet[01]
             oFusion:aRegistro := IIf(Len(aRet[04]) > 0,aRet[04],aRet[03])  // Registro do Pedido de Venda
