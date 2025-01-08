@@ -208,7 +208,8 @@ Static Function fnCallReg(aTitulos,nTela)
 
   cQuery += " and SE1.E1_TIPO not in ('" + MVABATIM + "')"
   cQuery += " and SE1.D_E_L_E_T_ <> '*'"
-  cQuery += " Order By SE1.E1_CLIENTE, SE1.E1_LOJA, SE1.E1_PREFIXO, SE1.E1_NUM, SE1.E1_PARCELA, SE1.E1_TIPO"
+  //cQuery += " Order By SE1.E1_CLIENTE, SE1.E1_LOJA, SE1.E1_PREFIXO, SE1.E1_NUM, SE1.E1_PARCELA, SE1.E1_TIPO"
+  cQuery += " Order By SE1.E1_PREFIXO, SE1.E1_NUM, SE1.E1_PARCELA, SE1.E1_TIPO"
 
   If Select("FINR01A") > 0
      dbSelectArea("FINR01A")

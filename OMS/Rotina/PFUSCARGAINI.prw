@@ -31,8 +31,11 @@ Static Function xProcessa()
   Local cCargaAte   := Space(FWTamSX3("DAK_COD")[1])
   Local cQry        := ""
   Local cFilQry     := ""
+  Local nSeqFus     := 0
   Local cNota       := ""
   Local cSerie      := ""
+  Local cCarga      := ""
+  Local cSeqCar     := ""
   Local _cAlias     := GetNextAlias()
   Local aSM0Data1   := FWLoadSM0()
   Local lIntFusion  := SuperGetMv("PC_INTFUSI",.F.,.T.)
@@ -129,15 +132,18 @@ Static Function xProcessa()
         IncProc("Integrando " + cEndpoint + ", registro " +  cValToChar(nAtual) + " de " + cValToChar(nFim) + "...")
 
         If SC5->(MSSeek( (_cAlias)->C9_FILIAL + (_cAlias)->C9_PEDIDO ))        
-          cNota  := (_cAlias)->C9_NFISCAL
-          cSerie := (_cAlias)->C9_SERIENF
+          nSeqFus := 0
+          cNota   := (_cAlias)->C9_NFISCAL
+          cSerie  := (_cAlias)->C9_SERIENF
+          cCarga  := ""
+          cSeqCar := ""
 
           // --- Parametro: 1 - Pedido Venda
           //                2 - Sequencial do Pedido
           //                3 - Testar bloqueio do Pedido
           //                4 - Registro deletado
           // ---------------------------------------------
-          aRet := oFusion:LerPedidoVenda(SC5->C5_NUM,0,.F.,.F.)
+          aRet := oFusion:LerPedidoVenda(SC5->C5_NUM,nSeqFus,cNota,cSerie,cCarga,cSeqCar)
           
           If aRet[01]
             oFusion:aRegistro := IIf(Len(aRet[04]) > 0,aRet[04],aRet[03])  // Registro do Pedido de Venda
