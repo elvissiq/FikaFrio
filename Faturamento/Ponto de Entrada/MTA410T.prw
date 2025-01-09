@@ -12,9 +12,12 @@
 
   @author Anderson Almeida - TOTVS
   @since   11/12/2024 
+  @Historico 
+    09/01/2025 - Comentado por Elvis Siqueira
 /*/
 //--------------------------------------------------------
 User Function MTA410T()
+  /*
   Local oFusion := PCLSFUSION():New()
   Local cRetPrx := ""
   Local nX      := 0
@@ -71,4 +74,5 @@ User Function MTA410T()
         EndIf   
      EndIf
   EndIf
+  */
 Return

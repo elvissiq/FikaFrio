@@ -14,9 +14,12 @@
 
   @Autor Anderson Almeida - TOTVS
   @since  27/08/2024 - Desenvolvimento da Rotina.
+  @Historico 
+  09/01/2025 - Comentado por Elvis Siqueira
 /*/
 //-------------------------------------------------------------------- 
 User Function MTA456L()
+  /*
   Local nOpc    := ParamIxb[1]       // 1 = OK, 3 = Rejeita ou 4 = Libera todos
   Local oFusion := PCLSFUSION():New()
   Local aRet    := {}
@@ -72,4 +75,5 @@ User Function MTA456L()
         EndIf
      EndIf   
   EndIf
+  */
 Return

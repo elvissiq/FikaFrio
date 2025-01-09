@@ -15,9 +15,12 @@
 
   @author Anderson Almeida - TOTVS
   @since   28/08/2024 
+  @Historico 
+  09/01/2025 - Comentado por Elvis Siqueira
 /*/
 //-------------------------------------------------------- 
 User Function MTA450I()
+  /*
   Local aArea   := GetArea()
   Local oFusion := PCLSFUSION():New()
   Local aRet    := {}
@@ -97,4 +100,5 @@ User Function MTA450I()
   EndIf
 
   RestArea(aArea)
+  */
 Return

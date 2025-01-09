@@ -15,10 +15,14 @@
       - Enviar Pedido de Venda para o FUSION.
 
   @author Anderson Almeida - TOTVS
-  @since   28/08/2024 
+  @since   28/08/2024
+  @Historico 
+  09/01/2025 - Comentado por Elvis Siqueira
 /*/
 //-------------------------------------------------------------------- 
 User Function M450CMAN()
+  Local lRet    := .T.
+  /*
   Local aArea   := GetArea()
   Local nOpcao  := Paramixb[1]            // 1 (Libera) ou 3 (Rejeita)
   Local oFusion := PCLSFUSION():New()
@@ -97,4 +101,5 @@ User Function M450CMAN()
   EndIf
 
   RestArea(aArea)
+  */
 Return lRet

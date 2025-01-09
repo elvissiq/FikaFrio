@@ -18,8 +18,9 @@
 //----------------------------------------------------------
 User Function MA410MNU()
 	If ! IsBlind()
-     aAdd(aRotina,{"Envio FUSION"   ,"U_FFFATM01()",0,4,0,Nil})
-     aAdd(aRotina,{"Pedido x FUSION","U_FFFATC02()",0,4,0,Nil})
-     aAdd(aRotina,{"Amarelinha"     ,"U_FFFATR01()",0,4,0,Nil})
+     aAdd(aRotina,{"Envio Multiplo FUSION" ,"U_PFAT005()" ,0,4,0,Nil})
+     aAdd(aRotina,{"Envio FUSION"          ,"U_FFFATM01()",0,4,0,Nil})
+     aAdd(aRotina,{"Pedido x FUSION"       ,"U_FFFATC02()",0,4,0,Nil})
+     aAdd(aRotina,{"Amarelinha"            ,"U_FFFATR01()",0,4,0,Nil})
   EndIf 
 Return 
