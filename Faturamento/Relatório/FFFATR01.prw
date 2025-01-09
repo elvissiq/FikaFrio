@@ -94,10 +94,10 @@ Static Function ImprPV()
  // -- Impressão dos itens
  // ----------------------
   cQry := "Select SC9.C9_PEDIDO, SC9.C9_CLIENTE, SC9.C9_LOJA, SC9.C9_ITEM, SC9.C9_PRODUTO, SC9.C9_QTDLIB, SC9.C9_PRCVEN,"
-  cQry += "       SC9.C9_LOTECTL, SC5.C5_CONDPAG, SC5.C5_EMISSAO, SC5.C5_COMENT, SC5.C5_TIPO, SC5.C5_TIPOCLI,"
+  cQry += "       SC9.C9_LOTECTL, SC5.C5_CONDPAG, SC5.C5_EMISSAO, SC5.C5_COMENT, SC5.C5_TIPO, SC5.C5_TIPOCLI, SC5.C5_DESC1,"
   cQry += "       SA1.A1_NOME, SA1.A1_NREDUZ, SA1.A1_XROTA, SA1.A1_END, SA1.A1_XNUMEND, SA1.A1_COMPLEM, SA1.A1_BAIRRO, SA1.A1_MUN,"
   cQry += "       SA1.A1_TEL, SA3.A3_NOME, SE4.E4_DESCRI, SC6.C6_TES, SC6.C6_NFORI, SC6.C6_SERIORI, SC6.C6_VALOR,"
-  cQry += "       SC6.C6_VALDESC, SB1.B1_DESC, SB1.B1_GRUPO, SBM.BM_DESC, Z02.Z02_DESCRI"
+  cQry += "       SC6.C6_VALDESC, SB1.B1_DESC, SB1.B1_GRUPO, SBM.BM_DESC, Z02.Z02_DESCRI, SC5.R_E_C_N_O_ as SC5RECNO"
   cQry += "  from " + RetSQLName("SC9") + " SC9"
   cQry += "   Left Join " + RetSQLName("SC5") + " SC5"
   cQry += "          on SC5.D_E_L_E_T_ <> '*'"
@@ -128,7 +128,8 @@ Static Function ImprPV()
   cQry += "   where SC9.D_E_L_E_T_ <> '*'"
   cQry += "     and SC9.C9_FILIAL = '" + FWxFilial("SC9") + "'"
   cQry += "     and SC9.C9_PEDIDO between '" + mv_par01 + "' and '" + mv_par02 + "'"
-  cQry += "     and (SC9.C9_BLEST  = '' or SC9.C9_BLEST = '10')"
+  cQry += "     and (SC9.C9_BLEST  = '' or SC9.C9_BLEST  = '10')"
+  cQry += "     and (SC9.C9_BLCRED = '' or SC9.C9_BLCRED = '10')"
   cQry += "     and SC6.D_E_L_E_T_ <> '*'"
   cQry += "     and SC6.C6_FILIAL = '" + FWxFilial("SC6") + "'"
   cQry += "     and SC6.C6_NUM    = SC9.C9_PEDIDO"
@@ -149,6 +150,9 @@ Static Function ImprPV()
 
      Return
   EndIf 
+
+  dbSelectArea("SC5")
+  SC5->(dbSetOrder(1))
 
   While ! QSC9->(Eof())
     If (nPos := aScan(aGrupo,{|x| x[01] == QSC9->B1_GRUPO .and. x[04] == QSC9->C9_PEDIDO})) == 0
@@ -182,7 +186,9 @@ Static Function ImprPV()
                       0,;                                // 19 - Total do Desconto
                       QSC9->C5_TIPO,;                    // 20 - C:Cliente , F:Fornecedor
                       QSC9->C5_TIPOCLI,;                 // 21 - Tipo do Cliente/Fornecedor
-                      AllTrim(QSC9->A1_XNUMEND)})        // 22 - Número do endereço
+                      AllTrim(QSC9->A1_XNUMEND),;        // 22 - Número do endereço
+                      QSC9->C5_DESC1,;                   // 23 - Percentual de desconto
+                      QSC9->SC5RECNO})                   // 24 - Recno da SC5
 
        nPos := Len(aCabPed) 
     EndIf
@@ -231,6 +237,11 @@ Static Function ImprPV()
       aAdd(aCliente, acabPed[nX][03])             // 02 - Loja do Cliente/Fornecedor
       aAdd(aCliente, aCabPed[nX][20])             // 03 - C:Cliente , F:Fornecedor
       aAdd(aCliente, aCabPed[nX][21])             // 04 - Tipo do Cliente/Fornecedor
+
+      If aCabPed[nX][23] > 0
+         aCabPed[nX][19] += Round(((aCabPed[nX][18] * aCabPed[nX][23]) / 100),2)
+         aCabPed[nX][18] := aCabPed[nX][18] - Round(((aCabPed[nX][18] * aCabPed[nX][23]) / 100),2)
+      EndIf
 
       For nY := 1 To Len(aItePed)
           If aCabPed[nX][01] == aItePed[nY][01]
@@ -367,6 +378,14 @@ Static Function ImprPV()
       EndIf
 
       STWManagReportPrint(cTexto,1)
+
+     // -- Gravar marca de já impresso
+     // ------------------------------
+/*      SC5->(dbGoto(aCabPed[nX][24])) 
+
+      Reclock("SC5",.F.)
+        Replace SC5->C5_XIMP with "S"
+      SC5->(MsUnlock())*/
   Next
 
   INFFechar()
