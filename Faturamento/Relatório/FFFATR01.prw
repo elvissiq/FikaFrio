@@ -240,7 +240,7 @@ Static Function ImprPV()
 
       If aCabPed[nX][23] > 0
          aCabPed[nX][19] += Round(((aCabPed[nX][18] * aCabPed[nX][23]) / 100),2)
-         aCabPed[nX][18] := aCabPed[nX][18] - Round(((aCabPed[nX][18] * aCabPed[nX][23]) / 100),2)
+//         aCabPed[nX][18] := aCabPed[nX][18] - Round(((aCabPed[nX][18] * aCabPed[nX][23]) / 100),2)
       EndIf
 
       For nY := 1 To Len(aItePed)
