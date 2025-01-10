@@ -220,7 +220,7 @@ oPrint := FWMSPrinter():New("cFilePrintert" ,IMP_SPOOL/*IMP_PDF*/, lAdjustToLega
   oPrint:Say(nLin,02,SC5->C5_CLIENTE + "/" + SC5->C5_LOJACLI + Space(2) + SubStr(SC5->C5_XNOME,1,34), oFont8)
 
   nLin += 40
-  oPrint:Say(nLin,02,"Fantasia " + AllTrim(SA1->A1_NREDUZ), oFont8)
+  oPrint:Say(nLin,02,"Fantasia " + AllTrim(SA1->A1_NREDUZ), oFont8 )
 
   nLin += 40
   oPrint:Say(nLin,02,AllTrim(SA1->A1_END), oFont8)

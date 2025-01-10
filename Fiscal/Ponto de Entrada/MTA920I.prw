@@ -21,6 +21,7 @@ User Function MTA920I()
         SD2->D2_LOTECTL := SD2->D2_XLOTECT
         SD2->D2_DTVALID := SD2->D2_XDTVALI
       EndIF 
+    SD2->(DBSkip())
     End
   EndIF 
 
