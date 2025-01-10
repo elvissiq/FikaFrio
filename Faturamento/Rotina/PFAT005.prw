@@ -327,7 +327,7 @@ Static Function ViewActv()
             (_cAliasC9)->(DbCloseArea())
         EndIf
 
-        If lTemSC9 .AND. lContinua .AND. nQtdLib > 0
+        If lTemSC9 .AND. lContinua .And. nQtdLib > 0
 
             nLinWhile++
             If nLinWhile > 1
