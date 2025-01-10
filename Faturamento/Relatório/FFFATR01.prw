@@ -381,11 +381,11 @@ Static Function ImprPV()
 
      // -- Gravar marca de já impresso
      // ------------------------------
-/*      SC5->(dbGoto(aCabPed[nX][24])) 
+      SC5->(dbGoto(aCabPed[nX][24])) 
 
       Reclock("SC5",.F.)
         Replace SC5->C5_XIMP with "S"
-      SC5->(MsUnlock())*/
+      SC5->(MsUnlock())
   Next
 
   INFFechar()
