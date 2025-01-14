@@ -19,6 +19,9 @@ User Function FFFATR01()
   Local cPerg := "FFFATR01"
 
   CriaPerg(@cPerg)
+
+  SetMVValue(cPerg, "MV_PAR01", SC5->C5_NUM)
+  SetMVValue(cPerg, "MV_PAR02", SC5->C5_NUM)
      
   If Pergunte(cPerg,.T.)
      MsAguarde({|| ImprPV()},"Processando...")
@@ -40,7 +43,7 @@ Static Function ImprPV()
   Local nX        := 0
   Local nY        := 0
   Local nPos      := 0
-  Local nTtItem   := 0
+  Local nVlDesto  := 0
   Local nTtIPI    := 0
   Local nTtICMSST := 0
   Local nTtFECST  := 0
@@ -97,7 +100,7 @@ Static Function ImprPV()
   cQry += "       SC9.C9_LOTECTL, SC5.C5_CONDPAG, SC5.C5_EMISSAO, SC5.C5_COMENT, SC5.C5_TIPO, SC5.C5_TIPOCLI, SC5.C5_DESC1,"
   cQry += "       SA1.A1_NOME, SA1.A1_NREDUZ, SA1.A1_XROTA, SA1.A1_END, SA1.A1_XNUMEND, SA1.A1_COMPLEM, SA1.A1_BAIRRO, SA1.A1_MUN,"
   cQry += "       SA1.A1_TEL, SA3.A3_NOME, SE4.E4_DESCRI, SC6.C6_TES, SC6.C6_NFORI, SC6.C6_SERIORI, SC6.C6_VALOR,"
-  cQry += "       SC6.C6_VALDESC, SB1.B1_DESC, SB1.B1_GRUPO, SBM.BM_DESC, Z02.Z02_DESCRI, SC5.R_E_C_N_O_ as SC5RECNO"
+  cQry += "       SC6.C6_PRUNIT, SC6.C6_VALDESC, SB1.B1_DESC, SB1.B1_GRUPO, SBM.BM_DESC, Z02.Z02_DESCRI, SC5.R_E_C_N_O_ as SC5RECNO"
   cQry += "  from " + RetSQLName("SC9") + " SC9"
   cQry += "   Left Join " + RetSQLName("SC5") + " SC5"
   cQry += "          on SC5.D_E_L_E_T_ <> '*'"
@@ -187,29 +190,33 @@ Static Function ImprPV()
                       QSC9->C5_TIPO,;                    // 20 - C:Cliente , F:Fornecedor
                       QSC9->C5_TIPOCLI,;                 // 21 - Tipo do Cliente/Fornecedor
                       AllTrim(QSC9->A1_XNUMEND),;        // 22 - Número do endereço
-                      QSC9->C5_DESC1,;                   // 23 - Percentual de desconto
-                      QSC9->SC5RECNO})                   // 24 - Recno da SC5
+                      QSC9->SC5RECNO})                   // 23 - Recno da SC5
 
        nPos := Len(aCabPed) 
     EndIf
 
-    nTtItem := (QSC9->C9_PRCVEN * QSC9->C9_QTDLIB) - QSC9->C6_VALDESC
-
+    If QSC9->C5_DESC1 > 0
+       nVlDesto := (QSC9->C6_PRUNIT * QSC9->C9_QTDLIB) - (QSC9->C9_PRCVEN * QSC9->C9_QTDLIB)
+     else
+       nVlDesto := 0
+    EndIf
+    
     aAdd(aItePed, {QSC9->C9_PEDIDO,;        // 01 - Pedido
                    QSC9->C9_ITEM,;          // 02 - Item
                    AllTrim(QSC9->B1_DESC),; // 03 - Descrição do Produto
                    QSC9->C9_QTDLIB,;        // 04 - Quantidade do Produto
                    QSC9->C9_PRCVEN,;        // 05 - Preço de venda
-                   QSC9->C6_VALDESC,;       // 06 - Valor do desconto
-                   nTtItem,;                // 07 - Valor total do item
+                   nVlDesto,;               // 06 - Valor do desconto
+                   QSC9->C6_VALOR,;         // 07 - Valor total do item
                    QSC9->C9_LOTECTL,;       // 08 - Número do lote 
                    QSC9->C9_PRODUTO,;       // 09 - Produto
                    QSC9->C6_TES,;           // 10 - TES
                    QSC9->C6_NFORI,;         // 11 - Nota Fiscal origem
-                   QSC9->C6_SERIORI})       // 12 - Serie da Nota Fiscal de origem
+                   QSC9->C6_SERIORI,;       // 12 - Serie da Nota Fiscal de origem
+                   QSC9->C6_PRUNIT})        // 13 - Preço de Lista
 
-    aCabPed[nPos][18] += nTtItem
-    aCabPed[nPos][19] += QSC9->C6_VALDESC
+    aCabPed[nPos][18] += QSC9->C6_VALOR
+    aCabPed[nPos][19] += nVlDesto
 
     QSC9->(dbSkip())
   EndDo
@@ -238,10 +245,6 @@ Static Function ImprPV()
       aAdd(aCliente, aCabPed[nX][20])             // 03 - C:Cliente , F:Fornecedor
       aAdd(aCliente, aCabPed[nX][21])             // 04 - Tipo do Cliente/Fornecedor
 
-      If aCabPed[nX][23] > 0
-         aCabPed[nX][19] += Round(((aCabPed[nX][18] * aCabPed[nX][23]) / 100),2)
-      EndIf
-
       For nY := 1 To Len(aItePed)
           If aCabPed[nX][01] == aItePed[nY][01]
              aAdd(aRegSC6,{aItePed[nY][09],;        // 01 - Produto
@@ -257,10 +260,10 @@ Static Function ImprPV()
       
       PegImpos(@aCliente, @aRegSC6, @nTtIPI, @nTtICMSST, @nTtFECST)        // Pegar os impostos
 
-      nTtPedido := (aCabPed[nX][18] + nTtIPI + nTtICMSST + nTtFECST) - aCabPed[nX][19]
+      nTtPedido := (aCabPed[nX][18] + nTtIPI + nTtICMSST + nTtFECST)
 
       aParcelas := Condicao(nTtPedido,aCabPed[nX][14],,aCabPed[nX][16])    // Pegar as parcelas
-  
+    
       If cModImp == "B"
          INFImpBmp(cPathRmt,"lgmid01.bmp")
          cTexto := ""
@@ -288,7 +291,7 @@ Static Function ImprPV()
           If aCabPed[nX][01] == aItePed[nY][01]
              cTexto += "<c>" + aItePed[nY][02] + " " + PadR(Substr(aItePed[nY][03],1,28),30)
              cTexto += " " + AllTrim(Str(aItePed[nY][04]))
-             cTexto += " " + Transform(aItePed[nY][05],"@E 99,999.99")
+             cTexto += " " + Transform(aItePed[nY][13],"@E 99,999.99")
              cTexto += " " + Transform(aItePed[nY][06],"@E 9,999.99")
              cTexto += " " + Transform(aItePed[nY][07],"@E 99,999.99")
              cTexto += "</c>" + Chr(13) + Chr(10)
@@ -300,7 +303,7 @@ Static Function ImprPV()
       Next
 
       cTexto += "<n>" + Replicate("-", nMaxChar) + "</n>" + Chr(13) + Chr(10)
-      cTexto += "<n>" + Space(18) + PadR("VALOR TABELA",20) + Transform(aCabPed[nX][18],"@E 99,999.99") + "</n>" + Chr(13) + Chr(10)
+      cTexto += "<n>" + Space(18) + PadR("VALOR TABELA",20) + Transform((aCabPed[nX][18] + aCabPed[nX][19]),"@E 99,999.99") + "</n>" + Chr(13) + Chr(10)
       cTexto += "<n>" + Space(18) + PadR("DESCONTO",20) + Transform(aCabPed[nX][19],"@E 99,999.99") + "</n>" + Chr(13) + Chr(10)
       cTexto += "<n>" + Space(18) + PadR("IPI",20) + Transform(nTtIPI,"@E 99,999.99") + "</n>" + Chr(13) + Chr(10)
       cTexto += "<n>" + Space(18) + PadR("ICMS SUBST TRIB",20) + Transform(nTtICMSST,"@E 99,999.99") + "</n>" + Chr(13) + Chr(10)
@@ -380,7 +383,7 @@ Static Function ImprPV()
 
      // -- Gravar marca de já impresso
      // ------------------------------
-      SC5->(dbGoto(aCabPed[nX][24])) 
+      SC5->(dbGoto(aCabPed[nX][23])) 
 
       Reclock("SC5",.F.)
         Replace SC5->C5_XIMP with "S"

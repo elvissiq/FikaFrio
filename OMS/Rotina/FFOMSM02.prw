@@ -139,7 +139,7 @@ Return
 /*/
 //-------------------------------------------------------------------
 Static Function fnF01Grv(pEmpresa, pFilial, nId)
-  Local lGerar    := .T.
+  Local lGerar    := .F.
   Local nPos      := 0
   Local aCab      := {}           // Array do cabeçalho da Carga
   Local aItem     := {}           // Array dos Pedidos da Carga
