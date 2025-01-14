@@ -8,40 +8,39 @@
 /*/{Protheus.doc} FFATDANF
 Função que gera a danfe de uma nota em uma pasta passada por parâmetro
 @author Elvis Siqueira (TOTVS)
-@since 09/01/2025
+@since 13/01/2025
 @version 1.0
 @param cNota, characters, Nota que será buscada
 @param cSerie, characters, Série da Nota
 @type function
 @example U_FFATDANF("000123ABC", "1")
 /*/
-User Function FFATDANF(cNota, cSerie)
-  Local aOrdem     := {}
-  Local aDevice    := {}
-  Local cIdEnt 		 := ""
-  Local cDevice    := ""
-  Local cRelName   := ""
-  Local cSession   := GetPrinterSession()
-  Local cSpool     := ""
-  Local lProssegue := .T.
-  Local lAdjust    := .F.
-  //Local nFlags     := PD_ISTOTVSPRINTER + PD_DISABLEORIENTATION + PD_DISABLEPREVIEW + PD_DISABLEPAPERSIZE
-  Local nFlags     := PD_ISTOTVSPRINTER + PD_DISABLEPAPERSIZE + PD_DISABLEPREVIEW + PD_DISABLEMARGIN
-  Local nLocal     := 1
-  Local nOrdem     := 1
-  Local nOrient    := 1
-  Local nPrintType := 6
-  Local oPrinter   := Nil
-  Local oSetup     := Nil
+User Function FFATDANF()
+Local aOrdem     := {}
+Local aDevice    := {}
+Local cIdEnt 	 := ""
+Local cDevice    := ""
+Local cRelName   := ""
+Local cSession   := GetPrinterSession()
+Local cSpool     := ""
+Local lProssegue := .T.
+Local lAdjust    := .F.
+Local nFlags     := PD_ISTOTVSPRINTER + PD_DISABLEPAPERSIZE + PD_DISABLEPREVIEW + PD_DISABLEMARGIN
+Local nLocal     := 1
+Local nOrdem     := 1
+Local nOrient    := 1
+Local nPrintType := 6
+Local oPrinter   := Nil
+Local oSetup     := Nil
 
-  Private aArray   := {}
-  Private li       := 15
-  Private nMaxLin  := 0
-  Private nMaxCol  := 0
-  Private lItemNeg := .F.
+Private aArray   := {}
+Private li       := 15
+Private nMaxLin  := 0
+Private nMaxCol  := 0
+Private lItemNeg := .F.
 
-  cIdEnt := GetIdEnt()
-  cRelName := "DANFE_"+cIdEnt+Dtos(MSDate())+StrTran(Time(),":","")
+  cIdEnt := RetIdEnti()
+  cRelName := "DANFE_"+cIdEnt+FWTimeStamp(1)
   
   cSpool := SuperGetMV("MV_REST",,"\RELATO\")
   If !ExistDir(cSpool) .And. (MakeDir(cSpool) <> 0)
@@ -79,7 +78,11 @@ User Function FFATDANF(cNota, cSerie)
   		fwWriteProfString( cSession, "LOCAL"      , If(oSetup:GetProperty(PD_DESTINATION)==1 ,"SERVER"    ,"CLIENT"    ), .T. )
   		fwWriteProfString( cSession, "PRINTTYPE"  , If(oSetup:GetProperty(PD_PRINTTYPE)==2   ,"SPOOL"     ,"PDF"       ), .T. )
   		fwWriteProfString( cSession, "ORIENTATION", If(oSetup:GetProperty(PD_ORIENTATION)==1 ,"PORTRAIT"  ,"LANDSCAPE" ), .T. )
-  		oPrinter:lServer := oSetup:GetProperty(PD_DESTINATION) == AMB_SERVER
+  		
+		oPrinter:setCopies(Val(oSetup:cQtdCopia))
+
+		/*
+		oPrinter:lServer := oSetup:GetProperty(PD_DESTINATION) == AMB_SERVER
   		oPrinter:SetDevice(oSetup:GetProperty(PD_PRINTTYPE))
   		oPrinter:setCopies(Val(oSetup:cQtdCopia))
   		If oSetup:GetProperty(PD_PRINTTYPE) == IMP_SPOOL
@@ -95,8 +98,9 @@ User Function FFATDANF(cNota, cSerie)
   		oPrinter:SetLandscape()
   		nMaxLin	:= 600
   		nMaxCol	:= 800
-  		RptStatus({|lEnd| IMPROM002(@lEnd,nOrdem, @oPrinter)},"Imprimindo Relatorio...")
-  	
+		*/
+
+		ImpDANFE(oPrinter,cIdent)
     Else
   		MsgInfo("Relatório cancelado pelo usuário.") //"Relatório cancelado pelo usuário."
   		oPrinter:Cancel()
@@ -105,5 +109,93 @@ User Function FFATDANF(cNota, cSerie)
     oSetup:= Nil
   	oPrinter:= Nil
   EndIf
+
+Return
+
+/*/{Protheus.doc} fButtomOk
+    Botão OK 
+/*/
+Static Function fButtomOk()
+    lBtOK := .T.
+    oDialog:DeActivate()
+Retur
+
+/*/{Protheus.doc} ImpDANFE
+Função que gera a danfe das notas de uma Carga
+@author Elvis Siqueira (TOTVS)
+@since 13/01/2025
+@version 1.0
+@type function
+/*/
+Static Function ImpDANFE(oPrinter,cIdent)
+Local oPanel
+Local cCargaDe  := Space(FWTamSX3("DAK_COD")[1])
+Local cCargaAte := Space(FWTamSX3("DAK_COD")[1])
+Local oFont     := TFont():New('Arial Black',,-23,.T.)
+Local cQry      := ""
+Local _cAlias   := GetNextAlias()
+Local nTamNota  := TamSX3('F2_DOC')[1]
+Local nTamSerie := TamSX3('F2_SERIE')[1]
+Local dDataDe   := SToD("20190101")
+Local dDataAt   := Date()
+
+Private oDialog  := Nil 
+Private lBtOK    := .F.
+
+	oDialog := FWDialogModal():New()
+	oDialog:SetBackground( .T. ) 
+	oDialog:SetTitle( 'Informe o código da Carga' )
+	oDialog:SetSize( 110, 160 )
+	oDialog:EnableFormBar( .T. )
+	oDialog:SetCloseButton( .T. )
+	oDialog:SetEscClose( .T. )
+	oDialog:CreateDialog()
+	oDialog:CreateFormBar()
+	oDialog:addCloseButton(Nil, "Fechar")
+    oDialog:addOkButton({|| fButtomOk() },'Confirmar')
+
+	oPanel := oDialog:GetPanelMain()
+			oTSay  := TSay():New(10,5,{|| "Carga De:"},oPanel,,oFont,,,,.T.,,,110,100,,,,,,.T.)
+            @ 008,080 MSGET cCargaDe SIZE 050,020 FONT oFont OF oPanel F3 "DAK" PIXEL
+			oTSay  := TSay():New(40,5,{|| "Carga Ate:"},oPanel,,oFont,,,,.T.,,,110,100,,,,,,.T.)
+            @ 038,080 MSGET cCargaAte SIZE 050,020 FONT oFont OF oPanel F3 "DAK" PIXEL
+	oDialog:Activate()
+
+	If lBtOK 
+		If !Empty(cCargaAte) .And. !Empty(cCargaAte)
+			
+			cQry := " SELECT MIN(F2_DOC) AS MINIMO, MAX(F2_DOC) AS MAXIMO, F2_SERIE AS SERIE FROM " + RetSQLName('SF2') + " "
+			cQry += " WHERE D_E_L_E_T_ <> '*' " "
+			cQry += " 	AND F2_CARGA BETWEEN '" + StrZero(Val(cCargaDe),6) + "' AND '" + StrZero(Val(cCargaAte),6) + "' " 
+			cQry += " GROUP BY F2_SERIE "
+			cQry := ChangeQuery(cQry)
+			IF Select(_cAlias) <> 0
+			(_cAlias)->(DbCloseArea())
+			EndIf
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQry),_cAlias,.T.,.T.)
+
+			IF (_cAlias)->(!Eof())
+				//Define as perguntas da DANFE
+				Pergunte("NFSIGW",.F.)
+				MV_PAR01 := PadR((_cAlias)->MINIMO,  nTamNota)  //Nota Inicial
+				MV_PAR02 := PadR((_cAlias)->MAXIMO,  nTamNota)  //Nota Final
+				MV_PAR03 := PadR((_cAlias)->SERIE ,  nTamSerie) //Série da Nota
+				MV_PAR04 := 2                          			//NF de Saida
+				MV_PAR05 := 2                          			//Frente e Verso = Nao
+				MV_PAR06 := 2                          			//DANFE simplificado = Nao
+				MV_PAR07 := dDataDe                    			//Data De
+				MV_PAR08 := dDataAt                    			//Data Até
+
+				RptStatus({|lEnd| u_DanfeProc(@oPrinter, @lEnd, cIdent, , , .F.)}, "Imprimindo Danfe...")
+				oPrinter:Print()
+			Else
+				MsgInfo('Nenhuma nota fiscal encontrada para a(s) carga(s) informada(s).')
+			EndIF 
+		Else
+			MsgInfo('Os campos "Carga De" e "Carga Ate", não podem estar em branco!')
+		EndIF 
+	Else
+		MsgInfo("Relatório cancelado pelo usuário.")
+	EndIF 
 
 Return
