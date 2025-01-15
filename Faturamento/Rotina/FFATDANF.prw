@@ -99,8 +99,9 @@ Private lItemNeg := .F.
   		nMaxLin	:= 600
   		nMaxCol	:= 800
 		*/
+		
+		ImpDANFE(@oPrinter,@oSetup,@cIdent)
 
-		ImpDANFE(oPrinter,cIdent)
     Else
   		MsgInfo("Relatório cancelado pelo usuário.") //"Relatório cancelado pelo usuário."
   		oPrinter:Cancel()
@@ -127,7 +128,7 @@ Função que gera a danfe das notas de uma Carga
 @version 1.0
 @type function
 /*/
-Static Function ImpDANFE(oPrinter,cIdent)
+Static Function ImpDANFE(oPrinter,oSetup,cIdent)
 Local oPanel
 Local cCargaDe  := Space(FWTamSX3("DAK_COD")[1])
 Local cCargaAte := Space(FWTamSX3("DAK_COD")[1])
@@ -141,6 +142,7 @@ Local dDataAt   := Date()
 
 Private oDialog  := Nil 
 Private lBtOK    := .F.
+Private lVerPerg := .F.
 
 	oDialog := FWDialogModal():New()
 	oDialog:SetBackground( .T. ) 
@@ -186,8 +188,14 @@ Private lBtOK    := .F.
 				MV_PAR07 := dDataDe                    			//Data De
 				MV_PAR08 := dDataAt                    			//Data Até
 
-				RptStatus({|lEnd| u_DanfeProc(@oPrinter, @lEnd, cIdent, , , .F.)}, "Imprimindo Danfe...")
-				oPrinter:Print()
+				Do Case
+					Case oSetup:oCtlOrientation:NAT == 1 //Retrato
+						RptStatus({|lEnd| u_DanfeProc(@oPrinter, @lEnd, @cIdent, , , .F.)}, "Imprimindo Danfe...")
+						oPrinter:Print()
+					Case oSetup:oCtlOrientation:NAT == 2 //Paisagem
+						oPrinter:lInJob := .T.
+						RptStatus({|| u_DANFE_P1(@cIdEnt ,/*cVal1*/ ,/*cVal2*/ ,@oPrinter ,@oSetup ,.T.)}, "Imprimindo Danfe...")
+				EndCase
 			Else
 				MsgInfo('Nenhuma nota fiscal encontrada para a(s) carga(s) informada(s).')
 			EndIF 

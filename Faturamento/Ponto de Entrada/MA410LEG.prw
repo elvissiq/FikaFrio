@@ -16,15 +16,16 @@ Ponto-de-Entrada: MA410LEG - Alterar textos da legenda de status do Pedido de Ve
 User Function MA410LEG()
     Local aNovLeg  := PARAMIXB
     
-    aNovLeg := { {'ENABLE'    ,'Pedido de Venda em aberto' },;
-                 {'DISABLE'   ,'Pedido de Venda encerrado' },;
-                 {'BR_AMARELO','Pedido de Venda liberado'  },;
-                 {'BR_AZUL'   ,'Pedido de Venda com Bloqueio de Regra' },;
-                 {'BR_LARANJA','Pedido de Venda com Bloqueio de Verba' },; 
-                 {'BR_PINK'   ,'Pedido de Venda com Bloqueio de Crédito' },;
-                 {'BR_MARROM' ,'Pedido de Venda com Bloqueio de Estoque' },;
-                 {'BR_BRANCO' ,'Pedido de Venda com Bloqueio de WMS' },;
-                 {'BR_PRETO'  ,'Pedido de Venda com Bloqueio de Regra (Desconto/Acrescimo)' }}
+    aNovLeg := { {'ENABLE'          ,'Pedido de Venda em aberto' },;
+                 {'DISABLE'         ,'Pedido de Venda encerrado' },;
+                 {'BR_AZUL_CLARO'   ,'Pedido Eliminado Residuo ' },;
+                 {'BR_AMARELO'      ,'Pedido de Venda liberado'  },;
+                 {'BR_AZUL'         ,'Pedido de Venda com Bloqueio de Regra' },;
+                 {'BR_LARANJA'      ,'Pedido de Venda com Bloqueio de Verba' },; 
+                 {'BR_PINK'         ,'Pedido de Venda com Bloqueio de Crédito' },;
+                 {'BR_MARROM'       ,'Pedido de Venda com Bloqueio de Estoque' },;
+                 {'BR_BRANCO'       ,'Pedido de Venda com Bloqueio de WMS' },;
+                 {'BR_PRETO'        ,'Pedido de Venda com Bloqueio de Regra (Desconto/Acrescimo)' }}
 
 Return aNovLeg
  

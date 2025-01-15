@@ -233,15 +233,15 @@ Return
 Static Function fnItens()
 Local cPictQtd  := "@E 99,999,999,999.99"
 
-	oPrint:Say (nLin, nPosUnid, AllTrim((_cAlias)->B1_UM)							, oFont14 ,200,07,,nPadRight,)
-	oPrint:Say (nLin, nPosDesc, Upper(AllTrim((_cAlias)->B1_DESC))					, oFont14 ,200,07,,nPadRight,)
+	oPrint:Say(nLin, nPosUnid, AllTrim((_cAlias)->B1_UM)							, oFont14 ,200,07,,nPadRight,)
+	oPrint:Say(nLin, nPosDesc, Upper(AllTrim(SubStr((_cAlias)->B1_DESC,1,41)))		, oFont14 ,200,07,,nPadLeft,1)
 	If SubStr(cCombo,1,1) == "N"
-	oPrint:Say (nLin, nPosQuan, AllTrim(AllToChar((_cAlias)->C9_QTDLIB,cPictQtd))	, oFont14 ,200,07,,nPadRight,)
+	oPrint:Say(nLin, nPosQuan, AllTrim(AllToChar((_cAlias)->C9_QTDLIB,cPictQtd))	, oFont14 ,200,07,,nPadRight,)
 	EndIF 
-	oPrint:Say (nLin, nPosLote, AllTrim((_cAlias)->C9_LOTECTL)						, oFont14 ,200,07,,nPadRight,)
-	oPrint:Say (nLin, nPosVali, DToC(SToD((_cAlias)->B8_DTVALID))					, oFont14 ,200,07,,nPadRight,)
+	oPrint:Say(nLin, nPosLote, AllTrim((_cAlias)->C9_LOTECTL)						, oFont14 ,200,07,,nPadRight,)
+	oPrint:Say(nLin, nPosVali, DToC(SToD((_cAlias)->B8_DTVALID))					, oFont14 ,200,07,,nPadRight,)
 	nLin += 10
-	oPrint:Say (nLin, nPosUnid, REPLICATE("-", 148)									, oFont14 ,200,07,,nPadRight,)
+	oPrint:Say(nLin, nPosUnid, REPLICATE("-", 148)									, oFont14 ,200,07,,nPadRight,)
 	nLin += 10
 
 Return
