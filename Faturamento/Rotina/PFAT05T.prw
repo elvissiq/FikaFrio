@@ -5,17 +5,17 @@
 #Include 'FWMVCDef.ch'
 
 // ----------------------------------------------
-/*/{protheusDoc.marcadores_ocultos} PFAT05E
+/*/{protheusDoc.marcadores_ocultos} PFAT05T
 
   Tela para integração do PROTHEUS x FUSION
 
   @author Elvis Siqueira (TOTVS)
   Retorno
   @historia
-  12/01/2025 - Desenvolvimento da Rotina.
+  16/01/2025 - Desenvolvimento da Rotina.
 /*/
 // -----------------------------------------------
-User Function PFAT05E()
+User Function PFAT05T()
     Local aArea  := FWGetArea()
     Local aButtons  :=  {;
                             {.F.,Nil},;         // Copiar
@@ -74,7 +74,7 @@ User Function PFAT05E()
     oTabTMP2:Create()
 
     IF Pergunte("TELAFUSION", .T.)
-        FWExecView("Integração Fusion","PFAT05E",MODEL_OPERATION_INSERT,,{|| .T.},,,aButtons,{|| fMyCancel()})
+        FWExecView("Integração Fusion","PFAT05T",MODEL_OPERATION_INSERT,,{|| .T.},,,aButtons,{|| fMyCancel()})
     EndIf 
 
     oTabTMP1:Delete()
@@ -94,7 +94,7 @@ Static Function ModelDef()
     Local oStrTMP1 := fnM01TMP("1")
     Local oStrTMP2  := fnM01TMP("2")
 
-    oModel := MPFormModel():New('PFAT05EM',/*bPre*/,/*bPost*/,/*bCommit*/,/*bCancel*/)
+    oModel := MPFormModel():New('PFAT05TM',/*bPre*/,/*bPost*/,/*bCommit*/,/*bCancel*/)
     oModel:AddFields('TABTMP1',/*cOwner*/,oStrTMP1/*bPre*/,/*bPos*/,/*bLoad*/)
     oModel:AddGrid('TABTMP2','TABTMP1',oStrTMP2,/*bLinePre*/,/*bLinePost*/,/*bPre - Grid Inteiro*/,/*bPos - Grid Inteiro*/,/*bLoad - Carga do modelo manualmente*/)
     oModel:SetPrimaryKey({})
@@ -137,7 +137,7 @@ Static Function ViewDef()
     Local oStrTMP1 := fnV01TMP("1")
     Local oStrTMP2 := fnV01TMP("2")
 
-    oModel := FWLoadModel("PFAT05E")
+    oModel := FWLoadModel("PFAT05T")
 
     oView := FwFormView():New()
     oView:SetModel(oModel)
@@ -243,8 +243,8 @@ Static Function ViewActv()
     cQry += " FROM "+ RetSqlName("SC5") +" SC5 "
     cQry += " INNER JOIN "+ RetSqlName("SC6") +" SC6 ON SC6.C6_NUM = SC5.C5_NUM "
     cQry += " INNER JOIN "+ RetSqlName("SA1") +" SA1 ON SA1.A1_COD = SC5.C5_CLIENTE AND SA1.A1_LOJA = SC5.C5_LOJACLI "
-    cQry += " WHERE SC5.D_E_L_E_T_ = '*' "
-    cQry += "   AND SC6.D_E_L_E_T_ = '*' "
+    cQry += " WHERE SC5.D_E_L_E_T_ <> '*' "
+    cQry += "   AND SC6.D_E_L_E_T_ <> '*' "
     cQry += "   AND SA1.D_E_L_E_T_ <> '*' "
     cQry += "   AND	SC5.C5_FILIAL  = '"+MV_PAR01+"' "
     cQry += "   AND	SC6.C6_FILIAL  = SC5.C5_FILIAL "
@@ -410,6 +410,10 @@ Static Function fEnvFusion()
                 cNumC5 := oStrTMP2:GetValue("T2_NUM")
                 cValor := AllTrim(AllToChar(oStrTMP2:GetValue("T2_VALOR"),"@E 999,999,999.99"))
                 cPeso  := AllTrim(AllToChar(oStrTMP2:GetValue("T2_PESO"),"@E 999,999,999.99"))
+                
+                dbSelectArea("SC5")
+                SC5->(MSSeek(xFilial("SC5")+cNumC5))
+                
                 lerPedido()
                 
                 lEnv++
@@ -471,16 +475,25 @@ Static Function lerPedido()
     Local nTotQry   := 0
     Local nPosQry   := 0
 
-    cQry := " SELECT * FROM "+ RetSqlName("SC5") +" SC5 "
-    cQry += " INNER JOIN "+ RetSqlName("SA1") +" SA1 ON SA1.A1_COD = SC5.C5_CLIENTE AND SA1.A1_LOJA = SC5.C5_LOJACLI "
-    cQry += " INNER JOIN "+ RetSqlName("SC6") +" SC6 ON SC6.C6_NUM = SC5.C5_NUM "
-    cQry += " INNER JOIN "+ RetSqlName("SB1") +" SB1 ON SB1.B1_COD = SC6.C6_PRODUTO "
-    cQry += " WHERE SC5.D_E_L_E_T_ = '*' "
-    cQry += "   AND SA1.D_E_L_E_T_ <> '*' "
-    cQry += "   AND SC6.D_E_L_E_T_ = '*' "
-    cQry += "   AND SB1.D_E_L_E_T_ <> '*' "
-    cQry += "   AND	SC5.C5_NUM = '"+cNumC5+"' "
-    cQry := ChangeQuery(cQry)
+    cQuery := "Select SC9.C9_PRODUTO as PRODUTO, SC9.C9_QTDLIB as QTDE, SC9.C9_PRCVEN as PRCVEN,"
+    cQuery += "       SC9.C9_CARGA as CARGA, SB1.B1_DESC, SB1.B1_UM, SB1.B1_POSIPI, SB1.B1_PESO,"
+    cQuery += "       SB5.B5_ALTURLC, SB5.B5_COMPRLC, SB5.B5_LARGLC, SC9.C9_NFISCAL,"
+    cQuery += "       Case when ((SC9.C9_BLCRED <> '10' and SC9.C9_BLCRED <> '') or"
+    cQuery += "                  (SC9.C9_BLEST <> '10' and SC9.C9_BLEST <> ''))"
+    cQuery += "             Then 'B' else 'L' end BLOQ, SC9.R_E_C_N_O_ as RECNO"
+    cQuery += "  from " + RetSqlName("SC9") + " SC9, " + RetSqlName("SB1") + " SB1, " + RetSqlName("SB5") + " SB5"
+    cQuery += "   where SC9.D_E_L_E_T_ <> '*'"
+    cQuery += "     and SC9.C9_FILIAL  = '" + xFilial("SC5") + "'"
+    cQuery += "     and SC9.C9_PEDIDO  = '" + cNumC5 + "'"
+    cQuery += "     and SC9.C9_NFISCAL = ''"
+    cQuery += "     and SC9.C9_SERIENF = ''"
+    cQuery += "     and SB1.D_E_L_E_T_ <> '*'"
+    cQuery += "     and SB1.B1_FILIAL  = '" + xFilial("SB1") + "'"
+    cQuery += "     and SB1.B1_COD     = SC9.C9_PRODUTO" 
+    cQuery += "     and SB5.D_E_L_E_T_ <> '*'"
+    cQuery += "     and SB5.B5_FILIAL  = '" + xFilial("SB5") + "'"
+    cQuery += "     and SB5.B5_COD     = SB1.B1_COD"
+    cQuery := ChangeQuery(cQuery)
     IF Select(QPSQ) <> 0
         (QPSQ)->(DbCloseArea())
     EndIf
@@ -508,12 +521,12 @@ Static Function lerPedido()
     cBody += '          "ent_ou_serv": "Entrega",'
     cBody += '          "pedido_erp": "' + cNumC5 + '",'
     cBody += '          "forma_pgto": "' + Alltrim(Posicione("SE4",1,FWxFilial("SE4")+(QPSQ)->C5_CONDPAG,"E4_DESCRI")) + '",'
-    cBody += '          "status": "9",'
+    cBody += '          "status": "N",'
     cBody += '          "obs": "",'
     cBody += '          "num_ped_conf": "' + cNumC5 + '",'
     cBody += '          "carga": "",'
     cBody += '          "cubagem": "0.000001",'
-    cBody += '          "podeformarcarga": "N",'
+    cBody += '          "podeformarcarga": "S",'
     cBody += '          "valor": "'+cValor+'",'
     cBody += '          "peso": "'+cPeso+'",'
     cBody += '          "valor_st": "0",'
@@ -521,8 +534,8 @@ Static Function lerPedido()
     cBody += '          "empresa_log": "' + cFilAnt + '",'
     cBody += '          "empresa_digit": "' + cFilAnt + '",'
     cBody += '          "pedido_orig": "' + cNumC5 + '",'
-    cBody += '          "dt_list_nf": "2025-01-08 17:00:37",'
-    cBody += '          "data_alt": "2025-01-08 17:00:37",'
+    cBody += '          "dt_list_nf": "' + SubStr(FWTimeStamp(3,SC5->C5_EMISSAO),"T"," ") + '",'
+    cBody += '          "data_alt": "' + SubStr(FWTimeStamp(3,SC5->C5_EMISSAO),"T"," ") + '",'
     cBody += '          "nf_cod_rota_erp": "",'
     cBody += '          "nf_descricao_rota": "",'
     cBody += '          "descr_cliente": "' + FwNoAccent(AllTrim((QPSQ)->A1_NREDUZ)) + '",'
@@ -541,7 +554,7 @@ Static Function lerPedido()
     cBody += '          "tel2_cliente": "",'
     cBody += '          "tel3_cliente": "",'
     cBody += '          "vlr_credito_cliente": "0",'
-    cBody += '          "data_cadastro_cliente": "2025-01-08 17:00:37",'
+    cBody += '          "data_cadastro_cliente": "' + SubStr(FWTimeStamp(3,SC5->C5_EMISSAO),"T"," ") + '",'
     cBody += '          "saldo_disp_cliente": "0",'
     cBody += '          "vlr_tits_vencido_cliente": "0",'
     cBody += '          "vlr_tits_vencer_cliente": "0",'
@@ -550,7 +563,7 @@ Static Function lerPedido()
     cBody += '          "cod_segmento": "2",'
     cBody += '          "descr_segmento": "ATACADO",'
     cBody += '          "filial_padrao": "' + cFilAnt + '",'
-    cBody += '          "data_ult_compra": "2025-01-08 17:00:37",'
+    cBody += '          "data_ult_compra": "' + SubStr(FWTimeStamp(3,SC5->C5_EMISSAO),"T"," ") + '",'
     cBody += '          "forma_pgto_cliente": "1",'
     cBody += '          "retem_icms_cliente": "N",'
     cBody += '          "permite_retira_cliente": "N",'
@@ -560,7 +573,7 @@ Static Function lerPedido()
     cBody += '          "praca_cod_erp": "",'
     cBody += '          "praca_descricao": "",'
     cBody += '          "vendedor_erp": "' + FwNoAccent(Posicione("SA3",1,xFilial("SA3") + (QPSQ)->C5_VEND1,"A3_NREDUZ")) + '",'
-    cBody += '          "data_pedido": "2025-01-08 17:00:37",'
+    cBody += '          "data_pedido": "' + SubStr(FWTimeStamp(3,SC5->C5_EMISSAO),"T"," ") + '",'
     cBody += '          "codigo_endereco_alt": "",'
     cBody += '          "referencia_entrega": "",'
     cBody += '          "restricao_transp": "N",'
@@ -573,21 +586,21 @@ Static Function lerPedido()
     While (QPSQ)->(!Eof())
         
         nPosQry++
-
-        cBody += '  {'
-        cBody += '   "cod_produto_erp": "' + (QPSQ)->C6_PRODUTO + '",'
-        cBody += '   "descricao": "' + AllTrim(FwNoAccent((QPSQ)->B1_DESC)) + '",'
-        cBody += '   "unidade": "' + (QPSQ)->B1_UM + '",'
-        cBody += '   "qtd": "' + AllTrim(Str((QPSQ)->C6_QTDVEN,16,2)) + '",'
-        cBody += '   "peso": "",'
-        cBody += '   "preco": "' + AllTrim(Str((QPSQ)->C6_PRCVEN,16,2)) + '",'
-        cBody += '   "subtotal": "' + AllTrim(Str((QPSQ)->C6_VALOR,16,2)) + '",'
-        cBody += '   "valor_icms_st": "",'
-        cBody += '   "ncm": "' + (QPSQ)->B1_POSIPI + '",'
-        cBody += '   "cst": "",'
-        cBody += '   "obs_item": ""'
-        cBody += '  }' + IIf(nPosQry < nTotQry,',','')
-
+        If QPSQ->BLOQ == "L"
+            cBody += '  {'
+            cBody += '   "cod_produto_erp": "' + (QPSQ)->C6_PRODUTO + '",'
+            cBody += '   "descricao": "' + AllTrim(FwNoAccent((QPSQ)->B1_DESC)) + '",'
+            cBody += '   "unidade": "' + (QPSQ)->B1_UM + '",'
+            cBody += '   "qtd": "' + AllTrim(Str((QPSQ)->C6_QTDVEN,16,2)) + '",'
+            cBody += '   "peso": "",'
+            cBody += '   "preco": "' + AllTrim(Str((QPSQ)->C6_PRCVEN,16,2)) + '",'
+            cBody += '   "subtotal": "' + AllTrim(Str((QPSQ)->C6_VALOR,16,2)) + '",'
+            cBody += '   "valor_icms_st": "",'
+            cBody += '   "ncm": "' + (QPSQ)->B1_POSIPI + '",'
+            cBody += '   "cst": "",'
+            cBody += '   "obs_item": ""'
+            cBody += '  }' + IIf(nPosQry < nTotQry,',','')
+        EndIF 
     (QPSQ)->(dbSkip()) 
     End
 
