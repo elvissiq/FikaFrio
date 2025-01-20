@@ -8,7 +8,7 @@
 /*/{Protheus.doc} FFATDANF
 Função que gera a danfe de uma nota em uma pasta passada por parâmetro
 @author Elvis Siqueira (TOTVS)
-@since 13/01/2025
+@since 15/01/2025
 @version 1.0
 @param cNota, characters, Nota que será buscada
 @param cSerie, characters, Série da Nota
@@ -25,7 +25,7 @@ Local cSession   := GetPrinterSession()
 Local cSpool     := ""
 Local lProssegue := .T.
 Local lAdjust    := .F.
-Local nFlags     := PD_ISTOTVSPRINTER + PD_DISABLEPAPERSIZE + PD_DISABLEPREVIEW + PD_DISABLEMARGIN
+Local nFlags     := PD_ISTOTVSPRINTER + PD_DISABLEPAPERSIZE + PD_DISABLEPREVIEW + PD_DISABLEMARGIN + PD_DISABLEORIENTATION
 Local nLocal     := 1
 Local nOrdem     := 1
 Local nOrient    := 1
@@ -67,7 +67,7 @@ Private lItemNeg := .F.
   	oPrinter := FWMSPrinter():New(cRelName, nPrintType, lAdjust, /*cPathDest*/, .T.)
 
   	oSetup := FWPrintSetup():New (nFlags,cRelName)
-  	oSetup:SetPropert(PD_PRINTTYPE   , nPrintType)
+	oSetup:SetPropert(PD_PRINTTYPE   , nPrintType)
   	oSetup:SetPropert(PD_ORIENTATION , nOrient)
   	oSetup:SetPropert(PD_DESTINATION , nLocal)
   	oSetup:SetPropert( PD_MARGIN, {60,60,60,60} )
@@ -80,32 +80,16 @@ Private lItemNeg := .F.
   		fwWriteProfString( cSession, "ORIENTATION", If(oSetup:GetProperty(PD_ORIENTATION)==1 ,"PORTRAIT"  ,"LANDSCAPE" ), .T. )
   		
 		oPrinter:setCopies(Val(oSetup:cQtdCopia))
+		
+		ImpDANFE(@oPrinter,@oSetup,@cIdent)
 
-		/*
-		oPrinter:lServer := oSetup:GetProperty(PD_DESTINATION) == AMB_SERVER
-  		oPrinter:SetDevice(oSetup:GetProperty(PD_PRINTTYPE))
-  		oPrinter:setCopies(Val(oSetup:cQtdCopia))
-  		If oSetup:GetProperty(PD_PRINTTYPE) == IMP_SPOOL
-  			oPrinter:nDevice := IMP_SPOOL
-  			fwWriteProfString(GetPrinterSession(),"DEFAULT", oSetup:aOptions[PD_VALUETYPE], .T.)
-  			oPrinter:cPrinter := oSetup:aOptions[PD_VALUETYPE]
-  		Else
-  			oPrinter:nDevice := IMP_PDF
-  			oPrinter:cPathPDF := oSetup:aOptions[PD_VALUETYPE]
-  			oPrinter:SetViewPDF(.T.)
-  		Endif
-
-  		oPrinter:SetLandscape()
-  		nMaxLin	:= 600
-  		nMaxCol	:= 800
-		*/
-
-		ImpDANFE(oPrinter,cIdent)
     Else
   		MsgInfo("Relatório cancelado pelo usuário.") //"Relatório cancelado pelo usuário."
   		oPrinter:Cancel()
   	EndIf
   	
+	FreeObj(oSetup)
+	FreeObj(oPrinter)
     oSetup:= Nil
   	oPrinter:= Nil
   EndIf
@@ -127,7 +111,7 @@ Função que gera a danfe das notas de uma Carga
 @version 1.0
 @type function
 /*/
-Static Function ImpDANFE(oPrinter,cIdent)
+Static Function ImpDANFE(oPrinter,oSetup,cIdent)
 Local oPanel
 Local cCargaDe  := Space(FWTamSX3("DAK_COD")[1])
 Local cCargaAte := Space(FWTamSX3("DAK_COD")[1])
@@ -141,6 +125,7 @@ Local dDataAt   := Date()
 
 Private oDialog  := Nil 
 Private lBtOK    := .F.
+Private lVerPerg := .F.
 
 	oDialog := FWDialogModal():New()
 	oDialog:SetBackground( .T. ) 
@@ -181,13 +166,34 @@ Private lBtOK    := .F.
 				MV_PAR02 := PadR((_cAlias)->MAXIMO,  nTamNota)  //Nota Final
 				MV_PAR03 := PadR((_cAlias)->SERIE ,  nTamSerie) //Série da Nota
 				MV_PAR04 := 2                          			//NF de Saida
-				MV_PAR05 := 2                          			//Frente e Verso = Nao
+				MV_PAR05 := 2                          			//Frente e Verso - 1 = Sim / 2 = Nao
 				MV_PAR06 := 2                          			//DANFE simplificado = Nao
 				MV_PAR07 := dDataDe                    			//Data De
 				MV_PAR08 := dDataAt                    			//Data Até
 
-				RptStatus({|lEnd| u_DanfeProc(@oPrinter, @lEnd, cIdent, , , .F.)}, "Imprimindo Danfe...")
-				oPrinter:Print()
+				oPrinter:SetResolution(78) //Tamanho estipulado para a Danfe
+				oPrinter:SetPortrait()
+				oPrinter:SetPaperSize(DMPAPER_A4)
+				oPrinter:SetMargin(60,60,60,60)
+				oPrinter:lServer := oSetup:GetProperty(PD_DESTINATION)==AMB_SERVER
+				If oSetup:GetProperty(PD_PRINTTYPE) == IMP_PDF
+					oPrinter:nDevice := IMP_PDF
+					oPrinter:cPathPDF := oSetup:aOptions[PD_VALUETYPE]
+				elseIf oSetup:GetProperty(PD_PRINTTYPE) == IMP_SPOOL
+					oPrinter:nDevice := IMP_SPOOL
+					oPrinter:SetParm( "-RFS")
+					fwWriteProfString(GetPrinterSession(),"DEFAULT", oSetup:aOptions[PD_VALUETYPE], .T.)
+					oPrinter:cFilePrint := GetTempPath() + oPrinter:cFileName
+					oPrinter:cPrinter := oSetup:aOptions[PD_VALUETYPE]
+				Endif
+				
+				oPrinter:lInJob := .T.
+
+				Do Case
+					Case oSetup:oCtlOrientation:NAT == 1 //Retrato
+						RptStatus({|lEnd| u_DanfeProc(@oPrinter, @lEnd, @cIdent, , , .F.)}, "Imprimindo Danfe...")
+						oPrinter:Print()
+				EndCase
 			Else
 				MsgInfo('Nenhuma nota fiscal encontrada para a(s) carga(s) informada(s).')
 			EndIF 
