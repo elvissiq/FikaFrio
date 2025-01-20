@@ -201,21 +201,21 @@ Static Function ImprPV()
        nVlDesto := 0
     EndIf
     
-    aAdd(aItePed, {QSC9->C9_PEDIDO,;        // 01 - Pedido
-                   QSC9->C9_ITEM,;          // 02 - Item
-                   AllTrim(QSC9->B1_DESC),; // 03 - Descrição do Produto
-                   QSC9->C9_QTDLIB,;        // 04 - Quantidade do Produto
-                   QSC9->C9_PRCVEN,;        // 05 - Preço de venda
-                   nVlDesto,;               // 06 - Valor do desconto
-                   QSC9->C6_VALOR,;         // 07 - Valor total do item
-                   QSC9->C9_LOTECTL,;       // 08 - Número do lote 
-                   QSC9->C9_PRODUTO,;       // 09 - Produto
-                   QSC9->C6_TES,;           // 10 - TES
-                   QSC9->C6_NFORI,;         // 11 - Nota Fiscal origem
-                   QSC9->C6_SERIORI,;       // 12 - Serie da Nota Fiscal de origem
-                   QSC9->C6_PRUNIT})        // 13 - Preço de Lista
+    aAdd(aItePed, {QSC9->C9_PEDIDO,;                       // 01 - Pedido
+                   QSC9->C9_ITEM,;                         // 02 - Item
+                   AllTrim(QSC9->B1_DESC),;                // 03 - Descrição do Produto
+                   QSC9->C9_QTDLIB,;                       // 04 - Quantidade do Produto
+                   QSC9->C9_PRCVEN,;                       // 05 - Preço de venda
+                   nVlDesto,;                              // 06 - Valor do desconto
+                   (QSC9->C9_PRCVEN * QSC9->C9_QTDLIB),;   // 07 - Valor total do item
+                   QSC9->C9_LOTECTL,;                      // 08 - Número do lote 
+                   QSC9->C9_PRODUTO,;                      // 09 - Produto
+                   QSC9->C6_TES,;                          // 10 - TES
+                   QSC9->C6_NFORI,;                        // 11 - Nota Fiscal origem
+                   QSC9->C6_SERIORI,;                      // 12 - Serie da Nota Fiscal de origem
+                   QSC9->C6_PRUNIT})                       // 13 - Preço de Lista
 
-    aCabPed[nPos][18] += QSC9->C6_VALOR
+    aCabPed[nPos][18] += (QSC9->C9_PRCVEN * QSC9->C9_QTDLIB)
     aCabPed[nPos][19] += nVlDesto
 
     QSC9->(dbSkip())
@@ -291,7 +291,7 @@ Static Function ImprPV()
           If aCabPed[nX][01] == aItePed[nY][01]
              cTexto += "<c>" + aItePed[nY][02] + " " + PadR(Substr(aItePed[nY][03],1,28),30)
              cTexto += " " + AllTrim(Str(aItePed[nY][04]))
-             cTexto += " " + Transform(aItePed[nY][13],"@E 99,999.99")
+             cTexto += " " + Transform(aItePed[nY][13],"@E 9,999.99")
              cTexto += " " + Transform(aItePed[nY][06],"@E 9,999.99")
              cTexto += " " + Transform(aItePed[nY][07],"@E 99,999.99")
              cTexto += "</c>" + Chr(13) + Chr(10)
