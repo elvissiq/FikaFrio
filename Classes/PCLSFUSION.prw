@@ -1002,39 +1002,36 @@ Method altCarga(pForma,pPedido,pRecno) Class PCLSFUSION
 
   For nId := 1 To Len(aPedido)
       SC9->(dbGoto(nRecnoSC9))
-
-//      If SC5->(dbSeek(FWxFilial("SC5") + aPedido[nId]))
         
-        // --- Parametro: 1 - Pedido Venda
-        //                2 - Sequencial do Pedido
-        //                3 - Validar pelo SC5 = .T. ou SC9 = .F.
-        //                4 - Excluído = .T. 
-        // ------------------------------------------------------
-         aRet := self:lerPedidoVenda(aPedido[nId],Val(SC9->C9_XSEQFUS),.F.,"","",SC9->C9_CARGA,SC9->C9_SEQCAR)
+     // --- Parametro: 1 - Pedido Venda
+     //                2 - Sequencial do Pedido
+     //                3 - Validar pelo SC5 = .T. ou SC9 = .F.
+     //                4 - Excluído = .T. 
+     // ------------------------------------------------------
+      aRet := self:lerPedidoVenda(aPedido[nId],Val(SC9->C9_XSEQFUS),.F.,"","",SC9->C9_CARGA,SC9->C9_SEQCAR)
+
+      If ! aRet[01]
+         ApMsgInfo(aRet[02],"ATENÇÃO - Integração Fusion")
+       else
+         self:aRegistro := aRet[04]                      // Registro do Pedido de Venda
+           
+        // Parâmetro:  pStatus - '1' = Aprovado
+        //                       'B' = Bloqueio Financeiro
+        //                       'C' = Bloqueio Comercial
+        //                       '9' = Cancelado
+        //             pForma  - 'S' = Sim forma carga
+        //                       'N' = Não forma carga 
+        //             lCarga  - .T. = Número da carga
+        //                       .F. = Sem número da carga 
+        // --------------------------------------------------------------------
+         self:saveEntregaServico("1", cForma, "S")
+
+         aRet := self:Enviar("saveEntregaServico") // Enviar para FUSION
 
          If ! aRet[01]
-            ApMsgInfo(aRet[02],"ATENÇÃO - Integração Fusion")
-          else
-            self:aRegistro := aRet[04]                      // Registro do Pedido de Venda
-           
-           //@Parâmetro:  pStatus - '1' = Aprovado
-           //                       'B' = Bloqueio Financeiro
-           //                       'C' = Bloqueio Comercial
-           //                       '9' = Cancelado
-           //             pForma  - 'S' = Sim forma carga
-           //                       'N' = Não forma carga 
-           //             lCarga  - .T. = Número da carga
-           //                       .F. = Sem número da carga 
-           // --------------------------------------------------------------------
-            self:saveEntregaServico("1", cForma, lNumCarga)
-
-            aRet := self:Enviar("saveEntregaServico") // Enviar para FUSION
-
-            If ! aRet[01]
-               ApMsgAlert(aRet[02],"ATENÇÃO - Integração Fusion")  
-            EndIf
-         EndIf   
-//      EndIf  
+            ApMsgAlert(aRet[02],"ATENÇÃO - Integração Fusion")  
+         EndIf
+      EndIf   
   Next
 
   FWRestArea(aArea)
