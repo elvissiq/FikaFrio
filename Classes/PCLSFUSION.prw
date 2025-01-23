@@ -1024,8 +1024,8 @@ Method altCarga(pForma,pPedido,pRecno) Class PCLSFUSION
         //             lCarga  - .T. = Número da carga
         //                       .F. = Sem número da carga 
         // --------------------------------------------------------------------
-         self:saveEntregaServico("1", cForma, "S")
-
+         self:saveEntregaServico("1",cForma,"S",.F.,"","")
+         
          aRet := self:Enviar("saveEntregaServico") // Enviar para FUSION
 
          If ! aRet[01]
