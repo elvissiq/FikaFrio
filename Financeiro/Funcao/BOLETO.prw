@@ -190,6 +190,7 @@ Static Function fnCallReg(aTitulos,nTela)
   cQuery += "      and SE1.E1_NATUREZ between '" + mv_par17 + "' and '" + mv_par18 + "'"
   cQuery += "      and SE1.E1_SALDO > 0"
   cQuery += "      and SE1.E1_TIPO in (" + cStgTipo + ")"
+  cQuery += "      and SE1.E1_XCOND NOT IN ('049','050','051','052')"
 	
   If mv_par23 == 2
      cQuery += " and SE1.E1_NUMBCO <> ' '"
@@ -208,8 +209,7 @@ Static Function fnCallReg(aTitulos,nTela)
 
   cQuery += " and SE1.E1_TIPO not in ('" + MVABATIM + "')"
   cQuery += " and SE1.D_E_L_E_T_ <> '*'"
-  //cQuery += " Order By SE1.E1_CLIENTE, SE1.E1_LOJA, SE1.E1_PREFIXO, SE1.E1_NUM, SE1.E1_PARCELA, SE1.E1_TIPO"
-  cQuery += " Order By SE1.E1_PREFIXO, SE1.E1_NUM, SE1.E1_PARCELA, SE1.E1_TIPO"
+  cQuery += " Order By SE1.E1_CLIENTE, SE1.E1_LOJA, SE1.E1_PREFIXO, SE1.E1_NUM, SE1.E1_PARCELA, SE1.E1_TIPO"
 
   If Select("FINR01A") > 0
      dbSelectArea("FINR01A")
@@ -237,7 +237,7 @@ Static Function fnCallReg(aTitulos,nTela)
                    FINR01A->E1_NATUREZ,;      // 07 = Natureza do Título
 		             FINR01A->E1_CLIENTE,;      // 08 = Cliente do título
 		             FINR01A->E1_LOJA,;         // 09 = Loja do Cliente
-		             FINR01A->E1_NOMCLI,;       // 10 = Nome do Cliente
+                   Posicione("SA1",1,xFilial("SA1") + FINR01A->E1_CLIENTE + FINR01A->E1_LOJA,"A1_NOME"),; //FINR01A->E1_NOMCLI,;       // 10 = Nome do Cliente
 		             Posicione("SA1",1,xFilial("SA1") + FINR01A->E1_CLIENTE + FINR01A->E1_LOJA,"A1_XEMCOB"),;  // 11 = Email de cobrança do cliente
 		             FINR01A->E1_EMISSAO,;      // 12 = Data de Emissão do Título
 		             FINR01A->E1_VENCTO,;       // 13 = Data de Vencimento do Título
@@ -466,7 +466,7 @@ Return
 --                                   --
 ---------------------------------------*/
 Static Function ImpBol(aTitulos)
-  Local aBenefic := {AllTrim(SM0->M0_NOMECOM),;                                   //[01] Nome da Empresa
+  Local aBenefic := {AllTrim(SM0->M0_FULNAME),;                                   //[01] Nome da Empresa
                      AllTrim(SM0->M0_ENDENT),;                                    //[02] Endereço
                      AllTrim(SM0->M0_BAIRENT),;                                   //[03] Bairro
                      AllTrim(SM0->M0_CIDENT),;                                    //[04] Cidade
@@ -667,8 +667,9 @@ Static Function ImpBol(aTitulos)
                  cAgencia := IIf(Len(AllTrim(SA6->A6_AGENCIA)) < 4,PadL(AllTrim(SA6->A6_AGENCIA),4,"0"),AllTrim(SA6->A6_AGENCIA))
                  cNumCta  := AllTrim(SA6->A6_NUMCON)
          EndIf        
-        
-         aBanco := {AllTrim(SA6->A6_COD),;                                                             // 01 - Numero do Banco
+
+
+            aBanco := {AllTrim(SA6->A6_COD),;                                                             // 01 - Numero do Banco
                     SA6->A6_NREDUZ,;                                                                   // 02 - Nome do Banco
                     cAgencia,;                                                                         // 03 - Agência
                     cNumCta,;                                                                          // 04 - Conta Corrente
@@ -682,9 +683,11 @@ Static Function ImpBol(aTitulos)
                        IIf(AllTrim(SA6->A6_COD) == "033",AllTrim(SEE->EE_TIPCART),AllTrim(SEE->EE_CODCART))),;
                        "SR"),;                                                                         // 10 - Tipo da Carteira
                     SEE->EE_XCHVPIX,;                                                                  // 11 - Chave PIX
-                    cAno   := SEE->EE_XANO,;                                                                     // 12 - Ano (BOLETO SICREDI)
+                    cAno   := SubStr(Dtoc(Date()),7,2),;                                                                     // 12 - Ano (BOLETO SICREDI)
                     cByte  := SEE->EE_XBYTE,;                                                                    // 13 - Byte (BOLETO SICREDI)
-                    cPosto := SEE->EE_XPOSTO,}                                                                   // 14 - Posto (BOLETO SICREDI)  
+                    cPosto := SEE->EE_XPOSTO,} 
+
+                                                                           // 14 - Posto (BOLETO SICREDI)  
 
 			   If Empty(SA1->A1_ENDCOB)
 				    aSacado := {AllTrim(SA1->A1_NOME),;						                 // [1] Razão Social
@@ -1192,7 +1195,7 @@ Static Function fnImpres(oPrint,aEmpresa,aDadTit,aBanco,aSacado,aBolTxt,aCB_RN_N
  // -- Impressão para beneficiário diferente da filial
  // --------------------------------------------------
   If lBenefic 
-     oPrint:Say(nRow2 + 1605,0550, AllTrim(SM0->M0_NOMECOM) +;
+     oPrint:Say(nRow2 + 1605,0550, AllTrim(SM0->M0_FULNAME) +;
                      " - CNPJ: " + Transform(SM0->M0_CGC, "@R 99.999.999/9999-99"), oFont08n)
   EndIf
  // --------------------------------------------------
@@ -1383,7 +1386,7 @@ Static Function fnImpres(oPrint,aEmpresa,aDadTit,aBanco,aSacado,aBolTxt,aCB_RN_N
  // -- Impressão para beneficiário diferente da filial
  // --------------------------------------------------
   If lBenefic 
-     oPrint:Say(nRow3 + 2815,0550, AllTrim(SM0->M0_NOMECOM) +;
+     oPrint:Say(nRow3 + 2815,0550, AllTrim(SM0->M0_FULNAME) +;
                      " - CNPJ: " + Transform(SM0->M0_CGC, "@R 99.999.999/9999-99"), oFont08n)
   EndIf
  // --------------------------------------------------
@@ -1948,12 +1951,9 @@ Static Function Modulo11(cData,nPeso,cOrig)
    Endif
 
    If cQualBco == "748"
-      // If D <= 1 
-      //    D := 0
-      // EndIf 
-      If D > 9 
-         D := 1
-      EndIf         
+      If D <= 1 
+         D := 0
+      EndIf          
    EndIf
    
 Return(D)
@@ -2022,8 +2022,8 @@ Static Function Modulo11NN(cData,nPeso,cOrig)
    EndIf
 
    If cQualBco == "748"
-      If D == 10 .or. D == 11 
-         D := 0
+      If D > 9 
+         D := 1
       EndIf          
    EndIf
 
@@ -2045,8 +2045,7 @@ Return(D)
 --                       Conta - tamanho 7 (sem digito)  --
 -----------------------------------------------------------*/
 Static Function Ret_cBarra(pBanco,pAgencia,pConta,pDacCC,pCart,pNNum,pValor,pVencto,pConvenio,pModDig,pPesoDig)
-  Local nId         := 0
-  Local nId1        := 0
+  Local nCalFat := 0
 
   Private cBanco      := pBanco
   Private cAgencia    := pAgencia
@@ -2067,8 +2066,16 @@ Static Function Ret_cBarra(pBanco,pAgencia,pConta,pDacCC,pCart,pNNum,pValor,pVen
   Private cCB         := ""
   Private cS          := ""
   Private cCmpLv      := ""
-  Private cFator      := StrZero(dVencto - CToD("07/10/97"),4)
+  Private cFator      := ""
   Private cValorFinal := StrZero((nValor*100),10) //StrZero(Int(nValor*100),10)
+
+  If (dVencto - CToD("07/10/97")) > 9999
+     nCalFat := Val(SubStr(AllTrim(Str(dVencto - CToD("07/10/97"))),1,4))
+     nCalFat += dVencto - CToD("22/02/25")
+     cFator  := StrZero(nCalFat,4)
+  else
+     cFator  := StrZero(dVencto - CToD("07/10/97"),4)
+  EndIf
 
   cNNum    := pNNum
   cQualBco := cBanco
@@ -2159,7 +2166,7 @@ Static Function Ret_cBarra(pBanco,pAgencia,pConta,pDacCC,pCart,pNNum,pValor,pVen
   If cVersao == "11"            
      aLinDig[07] := fnResolP11(aLinDig[07])
   EndIf
-   
+  
   cS      := &(aLinDig[07])
   nDvcb   := modulo11(cS,9,"") // Calculo do Digito Geral
   cCB     := SubStr(cS,1,4) + AllTrim(Str(nDvcb)) + SubStr(cS,5,39)
@@ -2375,7 +2382,7 @@ User Function fnEnvBol(pTitulos)
          oHtml:ValByName("cNum"    , aDados[nId][03])
          oHtml:ValByName("cParcela", aDados[nId][04])
          oHtml:ValByName("cVencto" , aDados[nId][05])
-         oHtml:ValByName("cEmpresa", SM0->M0_NOME)
+         oHtml:ValByName("cEmpresa", SM0->M0_FULNAME)
   
        // Start do WorkFlow
        //_user := Subs(cUsuario,7,15)
