@@ -105,17 +105,15 @@ Private cCombo   := ""
           (_cAlias)->(DbCloseArea())
       	EndIf
 		
-		cQry := " SELECT DISTINCT SC9.C9_PRODUTO, SB1.B1_DESC, SB1.B1_UM, SUM(SC9.C9_QTDLIB) AS C9_QTDLIB, SC9.C9_LOTECTL, SC9.C9_CARGA, SB8.B8_DTVALID "
+		cQry := " SELECT DISTINCT SC9.C9_PRODUTO, SB1.B1_DESC, SB1.B1_UM, SUM(SC9.C9_QTDLIB) AS C9_QTDLIB, SC9.C9_LOTECTL, SC9.C9_CARGA, SC9.C9_DTVALID "
 		cQry += " FROM " + RetSQLName('SC9') + " SC9 "
 		cQry += " INNER JOIN " + RetSQLName('SB1') + " SB1 ON SB1.B1_COD = SC9.C9_PRODUTO AND SB1.B1_FILIAL = '" + xFilial("SB1") + "'"
-		cQry += " INNER JOIN " + RetSQLName('SB8') + " SB8 ON SB8.B8_LOTECTL = SC9.C9_LOTECTL AND SB8.B8_DTVALID = SC9.C9_DTVALID AND SB8.B8_LOCAL = SC9.C9_LOCAL AND SB8.B8_FILIAL = '" + xFilial("SB8") + "'"
 		cQry += " WHERE SC9.D_E_L_E_T_ <> '*' "
 		cQry += " 	AND SB1.D_E_L_E_T_ <> '*' "
-		cQry += " 	AND SB8.D_E_L_E_T_ <> '*' "
 		cQry += " 	AND SC9.C9_FILIAL  = '" + xFilial("SC9") + "'"
 		cQry += "   AND SC9.C9_CARGA <> '' "
 		cQry += "   AND SC9.C9_CARGA BETWEEN '" + cCargaDe + "' AND '" + cCargaAte + "'"
-		cQry += " GROUP BY SC9.C9_PRODUTO, SB1.B1_DESC, SB1.B1_UM, SC9.C9_LOTECTL, SC9.C9_CARGA, SB8.B8_DTVALID "
+		cQry += " GROUP BY SC9.C9_PRODUTO, SB1.B1_DESC, SB1.B1_UM, SC9.C9_LOTECTL, SC9.C9_CARGA, SC9.C9_DTVALID "
 		cQry += " ORDER BY SC9.C9_CARGA, SC9.C9_PRODUTO, SC9.C9_LOTECTL "
 		cQry := ChangeQuery(cQry)
   		IF Select(_cAlias) <> 0
@@ -233,15 +231,15 @@ Return
 Static Function fnItens()
 Local cPictQtd  := "@E 99,999,999,999.99"
 
-	oPrint:Say (nLin, nPosUnid, AllTrim((_cAlias)->B1_UM)							, oFont14 ,200,07,,nPadRight,)
-	oPrint:Say (nLin, nPosDesc, Upper(AllTrim((_cAlias)->B1_DESC))					, oFont14 ,200,07,,nPadRight,)
+	oPrint:Say(nLin, nPosUnid, AllTrim((_cAlias)->B1_UM)							, oFont14 ,200,07,,nPadRight,)
+	oPrint:Say(nLin, nPosDesc, Upper(AllTrim(SubStr((_cAlias)->B1_DESC,1,41)))		, oFont14 ,200,07,,nPadLeft,1)
 	If SubStr(cCombo,1,1) == "N"
-	oPrint:Say (nLin, nPosQuan, AllTrim(AllToChar((_cAlias)->C9_QTDLIB,cPictQtd))	, oFont14 ,200,07,,nPadRight,)
+	oPrint:Say(nLin, nPosQuan, AllTrim(AllToChar((_cAlias)->C9_QTDLIB,cPictQtd))	, oFont14 ,200,07,,nPadRight,)
 	EndIF 
-	oPrint:Say (nLin, nPosLote, AllTrim((_cAlias)->C9_LOTECTL)						, oFont14 ,200,07,,nPadRight,)
-	oPrint:Say (nLin, nPosVali, DToC(SToD((_cAlias)->B8_DTVALID))					, oFont14 ,200,07,,nPadRight,)
+	oPrint:Say(nLin, nPosLote, AllTrim((_cAlias)->C9_LOTECTL)						, oFont14 ,200,07,,nPadRight,)
+	oPrint:Say(nLin, nPosVali, DToC(SToD((_cAlias)->C9_DTVALID))					, oFont14 ,200,07,,nPadRight,)
 	nLin += 10
-	oPrint:Say (nLin, nPosUnid, REPLICATE("-", 148)									, oFont14 ,200,07,,nPadRight,)
+	oPrint:Say(nLin, nPosUnid, REPLICATE("-", 148)									, oFont14 ,200,07,,nPadRight,)
 	nLin += 10
 
 Return

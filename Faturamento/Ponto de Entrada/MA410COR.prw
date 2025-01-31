@@ -18,7 +18,8 @@ User Function MA410COR()
 				            { "(U_fn410Vld('E'))", "BR_MARROM"},;      // Bloqueado por estoque
 	                  { "(! Empty(C5_NOTA) .or. C5_LIBEROK == 'E') .and. Empty(C5_BLQ) .and. (U_fn410Vld('L')) ","DISABLE" },;    // Pedido Encerrado            
   				          { "! Empty(C5_LIBEROK) .and. Empty(C5_NOTA) .and. Empty(C5_BLQ) .and. (U_fn410Vld('L')) " ,"BR_AMARELO"},;  // Pedido Liberado
-				            { "C5_BLQ == '1'"    , "BR_AZUL"},;        // Pedido Bloquedo por regra
+				            { "C5_NOTA == 'XXXXXXXXX' .and. C5_LIBEROK == 'S' .and. Empty(C5_BLQ) ","BR_AZUL_CLARO" },;    // Pedido Eliminado Residuo
+                    { "C5_BLQ == '1'"    , "BR_AZUL"},;        // Pedido Bloquedo por regra
 				            { "C5_BLQ == '2'"    , "BR_LARANJA"},;     // Pedido Bloquedo por verba					
 				            { "(U_fn410Vld('W'))", "BR_BRANCO"},;      // Bloqueado por WMS
 				            { "Empty(C5_LIBEROK) .and. Empty(C5_NOTA) .and. Empty(C5_BLQ)","ENABLE"},;  // Pedido em Aberto     

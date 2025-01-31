@@ -59,6 +59,7 @@ User Function PE01NFESEFAZ()
 
     Local aAreaSD2	:= SD2->(FWGetArea())
     Local aAreaSB8	:= SB8->(FWGetArea())
+    Local aAreaSF1  := SF1->(FWGetArea())
     Local cPictQtd  := PesqPict("SD2","D2_QUANT")
     Local nVolume   := 0
     Local _nI
@@ -114,6 +115,13 @@ User Function PE01NFESEFAZ()
         //@ Bloco responsável por acrescenta o Número do LOTE. ///// FIM /////
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+    Else
+        DbSelectArea("SF1")
+        IF SF1->(MsSeek(xFilial("SF1")+aNota[2]+aNota[1]+aNota[7]+aNota[8]))
+            If !Empty(SF1->F1_HISTRET) 
+                cMensCli += " MOTIVO: " + AllTrim(SF1->F1_HISTRET)
+            EndIf
+        EndIF 
     EndIF 
 
     If !Empty(aEspVol)
@@ -122,6 +130,7 @@ User Function PE01NFESEFAZ()
 
     FWRestArea(aAreaSD2)
     FWRestArea(aAreaSB8)
+    FWRestArea(aAreaSF1)
 
     aadd(aRetorno,aProd)
     aadd(aRetorno,cMensCli)
