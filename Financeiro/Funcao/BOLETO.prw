@@ -190,7 +190,6 @@ Static Function fnCallReg(aTitulos,nTela)
   cQuery += "      and SE1.E1_NATUREZ between '" + mv_par17 + "' and '" + mv_par18 + "'"
   cQuery += "      and SE1.E1_SALDO > 0"
   cQuery += "      and SE1.E1_TIPO in (" + cStgTipo + ")"
-  cQuery += "      and SE1.E1_XCOND NOT IN ('049','050','051','052')"
 	
   If mv_par23 == 2
      cQuery += " and SE1.E1_NUMBCO <> ' '"
@@ -683,7 +682,7 @@ Static Function ImpBol(aTitulos)
                        IIf(AllTrim(SA6->A6_COD) == "033",AllTrim(SEE->EE_TIPCART),AllTrim(SEE->EE_CODCART))),;
                        "SR"),;                                                                         // 10 - Tipo da Carteira
                     SEE->EE_XCHVPIX,;                                                                  // 11 - Chave PIX
-                    cAno   := SubStr(Dtoc(Date()),7,2),;                                                                     // 12 - Ano (BOLETO SICREDI)
+                    cAno   := SubStr(Dtoc(Date()),9,2),;                                                                     // 12 - Ano (BOLETO SICREDI)
                     cByte  := SEE->EE_XBYTE,;                                                                    // 13 - Byte (BOLETO SICREDI)
                     cPosto := SEE->EE_XPOSTO,} 
 
@@ -1951,8 +1950,8 @@ Static Function Modulo11(cData,nPeso,cOrig)
    Endif
 
    If cQualBco == "748"
-      If D <= 1 
-         D := 0
+      If D > 9 
+         D := 1
       EndIf          
    EndIf
    
