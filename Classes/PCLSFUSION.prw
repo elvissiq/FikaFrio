@@ -555,7 +555,7 @@ Method lerPedidoVenda(pPedido,pSeq,pSC5,pNF,pSerie,pCarga,pSeqCar) Class PCLSFUS
   cDsRota   := AllTrim(Posicione("Z02",1,FWxFilial("Z02") + SA1->A1_XROTA,"Z02_DESCRI"))
 
   While ! QPSQ->(Eof()) 
-    If QPSQ->BLOQ == "L"
+    If AllTrim(QPSQ->BLOQ) == "L"
        aAdd(aRegLib,{QPSQ->PRODUTO,;                         // 01 - Produto
                      QPSQ->B1_DESC,;                         // 02 - Descrição
                      QPSQ->B1_UM,;                           // 03 - Unidade do Produto 
@@ -703,9 +703,9 @@ Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCL
   self:cBody += '          "valor": "' + AllTrim(Str(self:aRegistro[01][14],16,2)) + '",'
   self:cBody += '          "peso": "' + AllTrim(Str(self:aRegistro[01][12],16,2)) + '",'
   self:cBody += '          "valor_st": "0",'
-  self:cBody += '          "empresa_fat": "' + cFilAnt + '",'
-  self:cBody += '          "empresa_log": "' + cFilAnt + '",'
-  self:cBody += '          "empresa_digit": "' + cFilAnt + '",'
+  self:cBody += '          "empresa_fat": "' + SC5->C5_FILIAL + '",'
+  self:cBody += '          "empresa_log": "' + SC5->C5_FILIAL + '",'
+  self:cBody += '          "empresa_digit": "' + SC5->C5_FILIAL + '",'
   self:cBody += '          "pedido_orig": "' + cPedido + '",'
   self:cBody += '          "dt_list_nf": "' + AllTrim(Str(Year(IIf(Empty(SC5->C5_SUGENT),dDataBase,SC5->C5_SUGENT))) + "-" +;
                 StrZero(Month(IIf(Empty(SC5->C5_SUGENT), dDataBase, SC5->C5_SUGENT)),2) + '-' +;
@@ -738,7 +738,7 @@ Method saveEntregaServico(pStatus, pForma, lCarga, pNFiscal, pSerieNF) Class PCL
   self:cBody += '          "codigo_cliente": "' + AllTrim(SA1->A1_COD) + AllTrim(SA1->A1_LOJA) + '",'
   self:cBody += '          "cod_segmento": "2",'
   self:cBody += '          "descr_segmento": "ATACADO",'
-  self:cBody += '          "filial_padrao": "' + cFilAnt + '",'
+  self:cBody += '          "filial_padrao": "' + SC5->C5_FILIAL + '",'
   self:cBody += '          "data_ult_compra": "' + AllTrim(Str(Year(dDataBase))) + "-" + StrZero(Month(dDataBase),2) +;
                                              '-' + StrZero(Day(dDataBase),2) + " " + Time() + '",'
   self:cBody += '          "forma_pgto_cliente": "1",'
