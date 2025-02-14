@@ -24,6 +24,7 @@ User Function M410VRES()
   Local nPeso     := 0
   Local nCubagem  := 0
   Local nTtVend   := 0
+  Local cDsRota   := ""
   Local cDsRegiao := ""
   Local cQry      := ""
   Local cUltSeq   := ""
@@ -47,7 +48,18 @@ User Function M410VRES()
 
      oFusion:aRegistro := {}
 
+     dbSelectArea("SA1")
+     SA1->(dbSetOrder(1))
+  
+     If ! SA1->(dbSeek(FWxFilial("SA1") + SC5->C5_CLIENTE + SC5->C5_LOJACLI))
+        aRet[01] := .F.
+        aRet[02] := "Verificar o cadastro de cliente do pedido."
+     
+        Return .F.
+     EndIf 
+
      cDsRegiao := AllTrim(Posicione("SX5",1,FWxFilial("SX5") + "A2" + SC5->C5_XREGIAO,"X5_DESCRI"))
+     cDsRota   := AllTrim(Posicione("Z02",1,FWxFilial("Z02") + SA1->A1_XROTA,"Z02_DESCRI"))
 
      dbSelectArea("SC6")
      SC6->(dbSetOrder(1))
@@ -88,7 +100,9 @@ User Function M410VRES()
                                  SC5->C5_XREGIAO,;                   // 22 - Código da Região
                                  cDsRegiao,;                         // 23 - Descrição da Região
                                  0,;                                 // 24 - Número do registro
-                                 "L"})                               // 25 - Status do item (L-Liberado/B-Bloqueado)
+                                 "L",;                               // 25 - Status do item (L-Liberado/B-Bloqueado)
+                                 SA1->A1_XROTA,;                     // 26 - Código da Rota
+                                 cDsRota})                           // 27 - Descrição da Rota
   
         nPeso    += SC6->C6_QTDVEN * SB1->B1_PESO
         nCubagem += SC6->C6_QTDVEN * (SB5->B5_COMPR * SB5->B5_ALTURA * SB5->B5_LARG)
